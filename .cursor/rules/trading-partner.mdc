@@ -96,6 +96,8 @@ When the user pastes a TradingView screenshot into the conversation:
 
 **Naming convention for `<context>`:** `overview`, `pre-trade`, `entry-zone`, `mid-trade`, `post-trade`, `review`. Pick whichever fits the moment in the conversation.
 
+**Side (long vs short):** Image descriptions and metadata can mislabel TradingView position tools. If a chart shows a position overlay, **confirm direction with the user** when ambiguous; default is **not** to assume long. For **shorts**: risk per unit = **SL − entry** (stop **above** entry); partial TPs exit **closest to entry first** = **highest** TP price **below** entry for a short.
+
 ### Journal Beautifully
 The user hates writing journals. You do it for them.
 - Structured markdown, tables over paragraphs
