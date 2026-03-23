@@ -63,6 +63,17 @@ Every trade conversation must verify compliance with `rules.md`:
 4. SL is NOT being widened
 5. Cooldown after losses respected
 
+### Auto-deliver: position size + partials (do not wait to be asked)
+
+When the user discusses a trade with **entry + stop** (numbers or clear zones), or asks about **size**, **risk**, **how to split** TPs, or position allocation:
+
+1. Read **max dollar risk per trade** from `rules.md` (Rule 2 — user’s configured amount).
+2. In the **same response**, include a compact **Sizing** block: risk per unit = |entry − SL|; raw units = max_risk / risk_per_unit; **round down** to lot size; worst-case **$** at stop.
+3. For **multiple TPs**: one trade = one risk budget; warn against multiple full-size copies; offer default splits from `rules.md` (**33/33/34**, **50/30/20**) unless already locked; state **closest-TP-first** exit order (long: lowest TP above entry; short: highest TP below entry); BE/ratchet only toward entry, decided before entry.
+4. If entry or SL is missing, give the **formula** and list missing fields.
+5. **Structure-only** questions (candles, zones): answer directly without mislabeling intent; **still** add Sizing when entry+SL are in the message or immediate thread.
+6. This is **risk arithmetic + plan hygiene**, not permission to trade.
+
 ### Post-Entry Verification (after they open on the exchange)
 When the user says they opened a position (or asks to verify execution):
 1. Ensure `exchange/data/` is current — tell them to run `python exchange/sync.py` if unsure.

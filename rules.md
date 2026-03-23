@@ -51,6 +51,26 @@ Before placing the order, tell AI:
 
 AI records it. This becomes the immutable reference for post-trade review.
 
+### Position size (how to derive it)
+
+Max **dollar risk** for this trade = the explicit amount from Rule 2 (fixed % of declared capital, or half-Kelly dollar risk once configured). State that number **before** entry.
+
+**Linear instruments (spot / perp quoted in coin terms):**
+
+1. **Risk per 1 unit** = `|entry price − stop price|` (use the actual fill assumption for entry).
+2. **Raw size (units)** = `max_risk_dollars / risk_per_unit`.
+3. **Round down** to the exchange’s **lot / contract step** so worst-case loss at the stop stays **≤** max risk (buffer for fees/slippage).
+
+**One line to state in the plan:** “If stopped before any management, loss ≤ $___ at SL ___ with size ___.”
+
+### Multiple take-profit levels (partials)
+
+- **One position, one risk budget.** Several TP lines mean **partial exits**, not multiple full positions at full size.
+- The plan must state **percentage or units** at **each** TP (total **100%**).
+- **Order of exits:** closest TP to entry along the profitable side first (long: **lowest** TP above entry; short: **highest** TP below entry), unless a different staged order is documented **before** entry.
+- **Default templates** if not yet chosen: **33% / 33% / 34%** or **50% / 30% / 20%**. Avoid parking most size on the farthest target by default.
+- After the **first** partial, stops may only move **toward entry or better** (Rule 4). Decide **before** entry when breakeven applies.
+
 **Why:** A plan spoken out loud to another entity is harder to corrupt than a plan that exists only in your head.
 
 ---
