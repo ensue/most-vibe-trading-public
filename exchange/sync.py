@@ -1,8 +1,12 @@
 """
-Bitget exchange data sync.
+Exchange data sync (default: Bitget futures).
 
-Pulls balances, open positions, and recent trade history from Bitget
-via ccxt and stores them as JSON + a human-readable snapshot.
+Pulls balances, open positions, and recent trade history via **ccxt**
+and stores them as JSON + a human-readable snapshot.
+
+MOST is not Bitget-only: ccxt supports many CEXes. To run on Binance USDM,
+Bybit, OKX, etc., fork this file — swap the exchange class, constructor
+options, and balance/position params. See `exchange/README.md`.
 
 Usage:
     python exchange/sync.py              # sync everything
@@ -10,7 +14,7 @@ Usage:
     python exchange/sync.py --positions  # positions only
     python exchange/sync.py --trades     # trade history only
 
-Credentials loaded from ../vault/bitget-api.env
+Credentials (default): ../vault/bitget-api.env
 """
 
 import argparse

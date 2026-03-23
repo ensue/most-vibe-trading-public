@@ -4,13 +4,13 @@
 
 - [Cursor IDE](https://cursor.sh) with an AI-enabled subscription
 - Python 3.10+
-- A Bitget exchange account (or another ccxt-supported exchange — see README for adaptation)
+- An account on **Bitget** (default) or any **[ccxt](https://github.com/ccxt/ccxt)-supported** CEX you adapt the sync for — see [`exchange/README.md`](exchange/README.md)
 
 ## Step 1 — Clone and open
 
 ```bash
-git clone https://github.com/ensue/most-ai-trading-consultant.git
-cd most-ai-trading-consultant
+git clone https://github.com/ensue/most-vibe-trading-public.git
+cd most-vibe-trading-public
 ```
 
 Open the folder as a workspace in Cursor IDE.
@@ -23,6 +23,8 @@ pip install -r exchange/requirements.txt
 
 ## Step 3 — Set up API credentials
 
+**Default (Bitget):**
+
 1. Create a **read-only** API key on Bitget (no trade/withdraw permissions for safety during setup)
 2. Copy the example env file and fill in your credentials:
 
@@ -31,6 +33,8 @@ cp vault/bitget-api.env.example vault/bitget-api.env
 ```
 
 3. Edit `vault/bitget-api.env` with your actual API key, secret, and passphrase
+
+**Another exchange:** keep the same *idea* (env file under `vault/`, gitignored). Rename vars or the filename as needed, then adjust `exchange/sync.py` per [`exchange/README.md`](exchange/README.md). Most of the work is mapping ccxt’s unified calls to that venue’s futures/spot model — not rebuilding MOST.
 
 ## Step 4 — Test exchange sync
 
@@ -90,7 +94,7 @@ git commit -m "Personal MOST setup"
 ├── rules.md                           ← your iron rules
 ├── profile.md                         ← psychological profile (AI builds over time)
 ├── exchange/
-│   ├── sync.py                        ← pulls live data from Bitget
+│   ├── sync.py                        ← default: Bitget; other CEXes → see README.md in this folder
 │   └── data/                          ← JSON + snapshot (gitignored)
 ├── journal/
 │   ├── positions/                     ← trade plans + outcomes

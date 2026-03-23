@@ -12,7 +12,7 @@ Trade with your charts, your exchange, and an AI that **hangs out in Cursor** li
 
 | Feature | How |
 |--------|-----|
-| **Live from the exchange** | On every new chat, the operating manual runs **sync** (Bitget via ccxt): balances, **open positions**, recent activity land in `exchange/data/`. No “type your size and side here” gate. |
+| **Live from the exchange** | On every new chat, the operating manual runs **sync** (default **Bitget** via ccxt; **any ccxt-supported CEX** is a small fork — see [`exchange/README.md`](exchange/README.md)): balances, **open positions**, recent activity land in `exchange/data/`. No “type your size and side here” gate. |
 | **Consultant, not compliance** | MOST is **not** your risk officer. It does **not** tell you whether you “correctly” opened a trade. It can **help you think** — HTF levels, scenario planning, headspace — when **you** invite that. |
 | **Execution check (optional)** | If **you** want a mechanical compare (plan vs what’s on the exchange), you can ask; it’s **not** a mandatory PASS/FAIL boss screen. |
 | **Charts on file** | Paste a **TradingView** screenshot in Cursor → MOST **logs and archives** it under `journal/charts/YYYY-MM/` with a consistent name and a link in the relevant journal note. |
@@ -33,6 +33,7 @@ Trade with your charts, your exchange, and an AI that **hangs out in Cursor** li
 | **Your rules stay yours** | `rules.md` is *your* commitments. The AI can mirror them back — it does not play middle management. |
 | **Journal without the cringe** | Structured markdown, tables, zero essay mode. |
 | **Math when you want it** | Monte Carlo + projection when you want context, not a sermon. |
+| **Pick your CEX** | Default sync is Bitget; **[ccxt](https://github.com/ccxt/ccxt)** means Binance, Bybit, OKX, etc. are **adapter-level** work — see [`exchange/README.md`](exchange/README.md). |
 
 ---
 
@@ -70,7 +71,7 @@ See [`SETUP.md`](SETUP.md) for full setup.
 ├── context.md                          ← rolling state the AI reads first
 ├── rules.md                            ← your personal commitments (template)
 ├── profile.md                          ← optional psychological / pattern context
-├── exchange/sync.py                    ← Bitget → JSON + snapshot.md
+├── exchange/sync.py                    ← default: Bitget → JSON + snapshot.md (other CEXes: see exchange/README.md)
 ├── journal/
 │   ├── positions/                      ← optional plans / history
 │   ├── reflections/                    ← ideas, HTF notes, narrative
@@ -84,9 +85,13 @@ See [`SETUP.md`](SETUP.md) for full setup.
 
 ---
 
-## Exchange note
+## Exchanges — you are not locked to Bitget
 
-Default sync targets **Bitget** futures via ccxt. Other venues: adapt `exchange/sync.py` and credential file format.
+The template ships with **Bitget** futures because that is what the author runs day-to-day. Under the hood everything goes through **[ccxt](https://github.com/ccxt/ccxt)**, which supports **many centralized exchanges** with the same patterns (`fetch_balance`, `fetch_positions`, orders/trades).
+
+**Hooking up Binance, Bybit, OKX, or another ccxt-supported venue is intentionally lightweight:** swap the exchange class, fix constructor/options for that venue’s spot vs perp model, align env credentials — see **[`exchange/README.md`](exchange/README.md)** for a concrete checklist. The journal, rules, Cursor flow, and file outputs do not care which logo is on the API.
+
+Multi-exchange or multi-account in one workspace is a natural next step (config flag + thin adapter per venue); it is not required on day one.
 
 ---
 
