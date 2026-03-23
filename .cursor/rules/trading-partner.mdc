@@ -67,6 +67,7 @@ Every trade conversation must verify compliance with `rules.md`:
 
 When the user discusses a trade with **entry + stop** (numbers or clear zones), or asks about **size**, **risk**, **how to split** TPs, or position allocation:
 
+0. If based on a **screenshot** (or image description), output **Assumed from chart (verify)** **first** (see Chart Screenshot Logging).
 1. Read **max dollar risk per trade** from `rules.md` (Rule 2 — user’s configured amount).
 2. In the **same response**, include a compact **Sizing** block: risk per unit = |entry − SL|; raw units = max_risk / risk_per_unit; **round down** to lot size; worst-case **$** at stop.
 3. For **multiple TPs**: one trade = one risk budget; warn against multiple full-size copies; offer default splits from `rules.md` (**33/33/34**, **50/30/20**) unless already locked; state **closest-TP-first** exit order (long: lowest TP above entry; short: highest TP below entry); BE/ratchet only toward entry, decided before entry.
@@ -97,6 +98,19 @@ When the user pastes a TradingView screenshot into the conversation:
 **Naming convention for `<context>`:** `overview`, `pre-trade`, `entry-zone`, `mid-trade`, `post-trade`, `review`. Pick whichever fits the moment in the conversation.
 
 **Side (long vs short):** Image descriptions and metadata can mislabel TradingView position tools. If a chart shows a position overlay, **confirm direction with the user** when ambiguous; default is **not** to assume long. For **shorts**: risk per unit = **SL − entry** (stop **above** entry); partial TPs exit **closest to entry first** = **highest** TP price **below** entry for a short.
+
+**Assumption disclosure (mandatory for screenshot-based discussion):** Whenever you interpret a **chart image** (or work from an image-derived description), include a compact block **in that same reply** — **before** sizing, structural claims, or journal summaries:
+
+```
+### Assumed from chart (verify)
+- Direction: long | short | unknown
+- Levels: entry ~…, SL ~…, TP(s) ~… (or “zones only” / “not readable from image”)
+- Source: user-confirmed | inferred from screenshot/description — may be wrong
+```
+
+- If anything is **inferred**, label it **provisional** and invite a one-line correction. **Never** present misread prices as facts.
+- The **Sizing** block must use **only** these stated assumptions (or ask for missing numbers).
+- When the user later corrects direction or levels, **update the journal entry** for that chart to match the user’s version and note the correction.
 
 ### Journal Beautifully
 The user hates writing journals. You do it for them.

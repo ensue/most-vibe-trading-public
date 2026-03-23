@@ -124,3 +124,15 @@ After a **pre-trade consultation** and **after you place the order on the exchan
 If **MISMATCH**: do not rationalize. Fix on exchange or close and re-plan — then log what happened.
 
 **Why:** Execution errors are not "small mistakes" — they are the same pattern family as plan corruption. Verification makes errors visible immediately.
+
+---
+
+## Chart screenshots — assumption disclosure (AI)
+
+When you paste a **screenshot**, the AI must **in the same reply** state explicitly:
+
+- **Direction:** long, short, or not stated  
+- **Price levels** it is using: entry, SL, TP(s), or zones — or **not readable**  
+- **Source:** your words (**confirmed**) vs **inferred from the image** (may be wrong)
+
+Screenshot reads can be wrong; the **locked trade plan** and journal follow **what you confirm**, not a misread chart.
