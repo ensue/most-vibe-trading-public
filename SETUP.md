@@ -108,3 +108,7 @@ git commit -m "Personal MOST setup"
 ├── vault/                             ← API keys (gitignored)
 └── ideas/                             ← future experiments
 ```
+
+---
+
+_Push to `origin/main` verified from maintainer workspace on 2026-03-23 (connectivity check; safe to delete this line later)._
