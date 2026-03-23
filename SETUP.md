@@ -1,74 +1,106 @@
-# MOST — Setup (Vibe Trading)
+# MOST — First-Time Setup
 
-## What you are installing
+## Prerequisites
 
-**MOST** = **Mental Operating System for Trading**. In Cursor, the AI acts as **The Vibe Trading Partner**: syncs your exchange when chat starts, archives chart screenshots, journals in structured markdown, and consults when you ask — **without** acting as trade approval software.
+- [Cursor IDE](https://cursor.sh) with an AI-enabled subscription
+- Python 3.10+
+- A Bitget exchange account (or another ccxt-supported exchange — see README for adaptation)
 
-## Requirements
-
-- [Cursor](https://cursor.sh) (AI-enabled plan)
-- Python **3.10+**
-- [Bitget](https://www.bitget.com) account + API keys (read-only is fine for sync-only use)
-
-## Steps
-
-### 1. Clone
+## Step 1 — Clone and open
 
 ```bash
-git clone https://github.com/ensue/most-vibe-trading-public.git
-cd most-vibe-trading-public
+git clone https://github.com/ensue/most-ai-trading-consultant.git
+cd most-ai-trading-consultant
 ```
 
-### 2. Dependencies
+Open the folder as a workspace in Cursor IDE.
+
+## Step 2 — Install Python dependencies
 
 ```bash
 pip install -r exchange/requirements.txt
 ```
 
-### 3. Credentials
+## Step 3 — Set up API credentials
+
+1. Create a **read-only** API key on Bitget (no trade/withdraw permissions for safety during setup)
+2. Copy the example env file and fill in your credentials:
 
 ```bash
 cp vault/bitget-api.env.example vault/bitget-api.env
 ```
 
-Edit `vault/bitget-api.env` with `BITGET_API_KEY`, `BITGET_API_SECRET`, `BITGET_PASSPHRASE`.  
-`vault/` is gitignored — never commit keys.
+3. Edit `vault/bitget-api.env` with your actual API key, secret, and passphrase
 
-### 4. First sync
+## Step 4 — Test exchange sync
 
 ```bash
 python exchange/sync.py
 ```
 
-Check `exchange/data/snapshot.md` — balance, open positions, recent orders.
+You should see balance, positions, and trade history fetched. Check `exchange/data/snapshot.md` for results.
 
-### 5. Open in Cursor
+## Step 5 — Start your first session
 
-Open this folder as a workspace. The file `.cursor/rules/trading-partner.mdc` is loaded automatically and defines MOST behavior: **startup sync**, **Monte Carlo refresh**, **screenshot archiving**, **consultant tone**.
+Open a conversation in Cursor. The AI will:
+1. Run the exchange sync and Monte Carlo simulation automatically
+2. Read your current state files
+3. Present a status block
+4. Guide you through initial configuration
 
-### 6. Fill your numbers
+In this first session, you'll agree on:
 
-Edit `rules.md` and `context.md` with your declared capital, risk %, goals, and any personal commitments. These are **yours** — the AI references them; it does not "enforce" them as an authority.
+| Parameter | Description | Example |
+|---|---|---|
+| Declared capital | Total amount committed to trading (can be virtual/mental bankroll) | $2,000 |
+| Physical margin | Amount deposited on exchange | $250 |
+| Risk percentage | Fixed % of declared capital per trade | 2% |
+| Goal | Target account value | $10,000 |
 
-### 7. Git (your fork)
+The AI fills in `rules.md` and `context.md` with your numbers and generates growth projections.
+
+## Step 6 — Build your profile
+
+`profile.md` starts blank. The AI builds it from conversations over time — your patterns, triggers, cognitive style, what works and what doesn't. You can also fill in the core facts section yourself during the first session.
+
+Be honest. This file exists so the AI can catch your patterns, not judge you.
+
+## Step 7 — Initialize your own git branch
+
+The template ships on `main`. For your personal use:
 
 ```bash
-git checkout -b develop   # optional personal branch
+git checkout -b develop
 git add .
-git commit -m "My MOST setup"
+git commit -m "Personal MOST setup"
 ```
 
----
+## What happens next
 
-## Daily use
+- **Before every trade:** open Cursor, talk to the AI, state your plan
+- **After opening a position:** run `python exchange/sync.py` and say "verify"
+- **After every session:** the AI updates your journal, context, and summaries automatically
+- **After 50 compliant trades:** the system transitions from fixed % to Half Kelly sizing
 
-1. Open Cursor → new chat in this workspace.  
-2. AI runs sync — **positions and balance appear from the exchange**.  
-3. Paste TradingView screenshots when you want them **logged and filed**.  
-4. Ask for consultation (levels, risk framing, journal entry) when **you** want it.
+## File structure
 
----
-
-## Adapting sync for another exchange
-
-Replace `ccxt.bitget` in `exchange/sync.py` with your venue, adjust credential env names in `vault/bitget-api.env.example`, and verify field mappings for positions/orders.
+```
+├── .cursor/rules/trading-partner.mdc  ← AI operating manual
+├── context.md                         ← AI loads first every session
+├── rules.md                           ← your iron rules
+├── profile.md                         ← psychological profile (AI builds over time)
+├── exchange/
+│   ├── sync.py                        ← pulls live data from Bitget
+│   └── data/                          ← JSON + snapshot (gitignored)
+├── journal/
+│   ├── positions/                     ← trade plans + outcomes
+│   ├── reflections/                   ← market analysis, ideas
+│   ├── mood/                          ← emotional state tracking
+│   ├── patterns/                      ← behavioral pattern observations
+│   └── charts/                        ← TradingView screenshots
+├── tools/
+│   ├── monte_carlo.py                 ← probability simulation
+│   └── projection.py                  ← deterministic growth model
+├── vault/                             ← API keys (gitignored)
+└── ideas/                             ← future experiments
+```

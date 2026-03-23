@@ -1,61 +1,106 @@
-# Personal trading commitments (template)
+# Iron Rules
 
-These are **your** commitments — not orders from MOST. The AI is **The Vibe Trading Partner** (consultant): it can reflect these when you ask and keep records — it does **not** act as a boss that approves or rejects your opens.
-
-Fill in the blanks in your first sessions.
+Non-negotiable. No exceptions. No "just this once."
 
 ---
 
-## 1. Session anchor (workspace + sync)
+## 1. Pre-Trade Pause
 
-Opening this workspace and running **sync** (automatic on MOST chat start) grounds the session: live balance, positions, recent activity from the exchange.
+Before placing any trade, open this workspace and talk to AI.
+State the thesis. Describe the setup. Hear the response.
+Minimum 60 seconds between "I see a setup" and "I place the order."
 
-Optional: talk through a setup before you click — when *you* want that pause.
+**Why:** The compression of "I think" → "I see" → "I know" happens fast enough to evade self-monitoring. The pause breaks the chain.
 
 ---
 
-## 2. Max risk per trade
+## 2. Max Risk Per Trade
 
 | Phase | Rule |
 |-------|------|
 | First 50 trades | Fixed **____%** of declared capital ($______) = **$____ max risk per trade** |
-| After 50 compliant | Half Kelly on trailing 50-trade stats (optional — configure when ready) |
+| After 50 compliant | Half Kelly on trailing 50-trade stats |
 
-### Bankroll model (optional)
+The number is absolute. Not "roughly" or "about." The exact dollar amount is stated before entry.
+
+### Bankroll Model
 
 | Parameter | Value |
 |-----------|-------|
 | Declared capital | $______ |
 | Physical margin on exchange | $______ |
-| Risk calculated against | Declared capital vs exchange margin (your choice — write it down) |
-| Top-up / hard stop | Your rules |
+| Risk calculated against | Declared capital, NOT exchange margin |
+| Top-up trigger | When margin drops below level needed for next trade |
+| Top-up increment | $______ |
+| Hard stop | If declared capital is fully drawn down, STOP. Re-evaluate before adding more. |
+
+_Fill in during your first session with the AI partner._
+
+**Why:** Escalation always starts with "just a bit more size." A hard number kills it at origin.
 
 ---
 
-## 3. Plan in journal (optional)
+## 3. Plan Before Entry
 
-When you want a written plan, ask MOST to log entry, SL, TP, size, thesis under `journal/positions/`. **No requirement** when you do not want it. The exchange snapshot is always the factual record of what is open.
+Before placing the order, tell AI:
+- **Entry** (price or market)
+- **Stop loss** (exact price)
+- **Take profit** (at least one level)
+- **Position size** (exact amount)
+- **Thesis** (one sentence: why this trade)
 
----
+AI records it. This becomes the immutable reference for post-trade review.
 
-## 4. No SL widening (if this is your line)
-
-Your stop moves toward entry or stays — never away — **if** you adopt this rule for yourself.
-
----
-
-## 5. Cooldown after loss (optional)
-
-Your rule for stopping after losses — MOST can help you track it if you ask.
+**Why:** A plan spoken out loud to another entity is harder to corrupt than a plan that exists only in your head.
 
 ---
 
-## 6. Tooling value check
+## 4. No SL Widening
 
-Periodically ask whether Cursor + MOST still pays for itself in **clarity and logging** — not as an AI-enforced scorecard.
+The stop loss moves toward entry or stays where it is.
+Never away from entry. Moving SL to breakeven is always permitted and encouraged.
+
+There is no scenario, no "new information," no market condition that justifies widening the stop.
+
+**Why:** Widening SL is the single highest-damage behavioral failure. It converts controlled losses into catastrophic ones.
 
 ---
 
-## Exchange snapshot
+## 5. Cooldown After Loss
 
-After sync, `exchange/data/snapshot.md` and `positions.json` describe what the exchange shows. If you ask, MOST can compare that to a saved note — as a **neutral diff**, not a moral verdict.
+After a stop-out, return to this workspace before any new trade.
+Report: what happened, how you feel, whether the plan was followed.
+AI logs it. Then — and only then — consider the next entry.
+
+After 2 consecutive losses in one session: session ends. Mandatory.
+
+**Why:** Serial entry after losses is a consistent value-destruction pattern. Each subsequent entry is less analytical and more compulsive. The cooldown breaks the revenge cycle.
+
+---
+
+## 6. AI Accountability Cost
+
+This system (Cursor + AI partner) has a monthly cost. That is a real expense.
+
+The AI must demonstrably contribute to net-positive trading results. If after 3 months the system has not paid for itself through compliant, profitable trading, the approach must be re-evaluated.
+
+**Metric:** Cumulative net PnL (after fees) must exceed cumulative AI cost within the first 3 months.
+
+---
+
+## Post-Entry Verification (mandatory procedure)
+
+After a **pre-trade consultation** and **after you place the order on the exchange**, you complete the loop:
+
+1. Run: `python exchange/sync.py` (from workspace root).
+2. Tell AI: "Position opened — verify."
+3. AI reads `exchange/data/positions.json` and `exchange/data/snapshot.md`, compares to the **locked plan** recorded in `journal/positions/` for that trade (symbol, side, size, entry zone, SL, TP).
+4. AI responds with **PASS** or **MISMATCH** and a short checklist:
+   - Side (long/short) matches plan
+   - Size within agreed tolerance vs plan
+   - Entry consistent with plan (market vs limit — acknowledge slippage)
+   - SL and TP present on exchange if the plan required them
+
+If **MISMATCH**: do not rationalize. Fix on exchange or close and re-plan — then log what happened.
+
+**Why:** Execution errors are not "small mistakes" — they are the same pattern family as plan corruption. Verification makes errors visible immediately.

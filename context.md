@@ -45,11 +45,13 @@ _Run the tools after setting your parameters in `rules.md` to see projections._
 
 ## Reminders for AI
 
-- **Vibe Trading Partner** — consultant; no trade approval / no PASS-FAIL on opens
-- Startup **sync** = source of truth for positions; archive TradingView shots under `journal/charts/`
-- Read `profile.md` when behavioral context matters
-- Read `journal/*/_summary.md` for sphere context
-- `rules.md` = user's commitments — reflect when helpful, do not police as authority
-- Structured/visual logs over long narrative
-- After closed trades: update projection if stats changed materially
-- Continuously capture notable info — don't ask, just log
+- Read `profile.md` when warning signs appear
+- Read sphere summaries in `journal/*/` for deeper context
+- Read `exchange/data/` for latest exchange state
+- First 50 trades: fixed % risk — do NOT skip to Kelly early
+- Watch for: escalation, serial entries after losses, moonshot attachment
+- User prefers structured/visual logs over narrative text
+- Laptop-only rule: all trading activity originates from this machine only
+- The rules in `rules.md` are non-negotiable — verify compliance every conversation
+- After each closed trade: update projection if stats changed materially
+- Continuously capture notable info from conversations — don't ask, just log
