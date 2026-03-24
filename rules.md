@@ -63,6 +63,8 @@ Max **dollar risk** for this trade = the explicit amount from Rule 2 (fixed % of
 
 **One line to state in the plan:** “If stopped before any management, loss ≤ $___ at SL ___ with size ___.”
 
+**Chart convention (same entry + same SL, different TPs):** Multiple overlays (e.g. position tools) with **identical entry and identical stop** and **only** different take-profit levels = **one** trade, **one** risk budget (**1R** to that SL), **partial exits** at each TP. Size once from |entry − SL|; state **% or units** per TP (total **100%**). **Different** entry or **different** SL between overlays ⇒ separate risk unless one explicit combined plan says otherwise.
+
 ### Multiple take-profit levels (partials)
 
 - **One position, one risk budget.** Several TP lines mean **partial exits**, not multiple full positions at full size.

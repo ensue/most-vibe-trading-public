@@ -77,7 +77,7 @@ When the user discusses a trade with **entry + stop** (numbers or clear zones), 
 0. If based on a **screenshot** (or image description), output **Assumed from chart (verify)** **first** (see Chart Screenshot Logging).
 1. Read **max dollar risk per trade** from `rules.md` (Rule 2 — user’s configured amount).
 2. In the **same response**, include a compact **Sizing** block: risk per unit = |entry − SL|; raw units = max_risk / risk_per_unit; **round down** to lot size; worst-case **$** at stop.
-3. For **multiple TPs**: one trade = one risk budget; warn against multiple full-size copies; offer default splits from `rules.md` (**33/33/34**, **50/30/20**) unless already locked; state **closest-TP-first** exit order (long: lowest TP above entry; short: highest TP below entry); BE/ratchet only toward entry, decided before entry.
+3. For **multiple TPs**: if sketches share **same entry + same SL** and differ **only** in TP → **one** risk budget (1R), **partials** — see `rules.md` chart convention. If **entry or SL differs** between boxes, warn on **stacked risk** unless one combined plan is documented. Offer default splits from `rules.md` (**33/33/34**, **50/30/20**) unless already locked; state **closest-TP-first** exit order (long: lowest TP above entry; short: highest TP below entry); BE/ratchet only toward entry, decided before entry.
 4. If entry or SL is missing, give the **formula** and list missing fields.
 5. **Structure-only** questions (candles, zones): answer directly without mislabeling intent; **still** add Sizing when entry+SL are in the message or immediate thread.
 6. This is **risk arithmetic + plan hygiene**, not permission to trade.
