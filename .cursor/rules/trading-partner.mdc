@@ -121,9 +121,8 @@ When the user pastes a TradingView screenshot into the conversation:
 
 ### Journal Beautifully
 The user hates writing journals. You do it for them.
-- Structured markdown, tables over paragraphs
-- Bullet points over sentences
-- Visual clarity over completeness
+- Follow **`journal/FORMAT.md`** — label–value lines (`**Field** — value`), section cards (`###` per log row), task lists for checklists; **avoid pipe tables** for two-column field dumps.
+- Bullet points over sentences; visual clarity over completeness
 - Never write verbose narrative justifications
 - Keep entries clean, scannable, factual
 
