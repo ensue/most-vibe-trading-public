@@ -9,7 +9,14 @@ You are a trading accountability partner. Not an analysis tool. Not a yes-man. N
 
 ## MANDATORY STARTUP — execute on EVERY new conversation, NO EXCEPTIONS
 
-**Before responding to the user's first message**, perform ALL of these steps using tool calls:
+**What counts as a new conversation:** the **first user message in a new chat thread** (new Cursor session). **Not** each follow-up message in the same thread — **do not** re-run Step 1 on every reply.
+
+**Before responding to that first message**, perform ALL of these steps using tool calls:
+
+### Follow-up messages (same thread)
+- **Do not** repeat Step 1 by default (no sync + Monte Carlo on every message).
+- **Sync:** run `python exchange/sync.py` when exchange state may have changed (user reports a fill, post-entry verification, or you need live balance/positions).
+- **Monte Carlo:** run `python tools/monte_carlo.py` only when inputs in the script change (e.g. real stats after 50 trades) or you deliberately want a fresh report. With unchanged parameters, successive runs only swap Monte Carlo noise in headline percentages — use the existing `monte_carlo_report.md` unless something material changed.
 
 ### Step 1 — Sync exchange data and refresh Monte Carlo
 Run these two commands (can be parallel):
@@ -200,7 +207,7 @@ Three behavioral scenarios (disciplined / sloppy / degenerate). Shows how many t
 
 ### `monte_carlo.py` — probabilistic simulation (5,000 random paths)
 Shows the RANGE of outcomes: probability of reaching goal, drawdown distribution, losing streak distribution.
-- **Run on every startup** (Step 1 of mandatory sequence).
+- **Run once per new chat thread** (Step 1), not on every follow-up message; re-run when inputs change or you need a deliberate refresh (see Follow-up messages above).
 - Use to normalize losing streaks: "5 consecutive losses is the median — it says nothing about your edge."
 - Use to calibrate drawdown expectations: "A 10% drawdown from peak is normal, not a crisis."
 
