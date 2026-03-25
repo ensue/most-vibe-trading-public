@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "updated_at": null,
+  "total_xp": 0,
+  "level": 1,
+  "title": "Initiate",
+  "xp_to_next_level": 120,
+  "discipline_score": 0.0,
+  "analysis_score": 0.0,
+  "compliance_streak": 0,
+  "missions": {
+    "window": "weekly",
+    "completed_this_window": [],
+    "last_reset": null
+  },
+  "badges": [],
+  "history": []
+}

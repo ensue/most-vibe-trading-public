@@ -14,6 +14,14 @@ Last updated: ___
 | Last session | N/A — system initialized |
 | Next trade window | ___ |
 
+## Progression
+
+| Metric | Value |
+|--------|-------|
+| Total XP | See `system/progression_state.json` |
+| Level | See `system/progression_state.json` |
+| Session XP breakdown | `tools/progression_report.md` |
+
 ## Risk Model
 
 - **Current:** Fixed ___% of $___  declared capital = **$___ max risk per trade**

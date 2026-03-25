@@ -60,6 +60,17 @@ python exchange/sync.py
 
 Open the folder in **Cursor**. The rule file under `.cursor/rules/` tells the AI how MOST runs — including **sync on session start** and **screenshot archiving**.
 
+Quality progression layer (optional):
+
+```bash
+python exchange/sync.py
+python tools/progression.py
+```
+
+This generates:
+- `tools/progression_report.md`
+- `system/progression_state.json`
+
 See [`SETUP.md`](SETUP.md) for full setup.
 
 ---
@@ -78,7 +89,8 @@ See [`SETUP.md`](SETUP.md) for full setup.
 │   ├── mood/                           ← energy / headspace
 │   ├── patterns/                       ← behaviors you are tracking
 │   └── charts/                         ← TradingView exports (archived here)
-├── tools/                              ← monte_carlo.py, projection.py
+├── tools/                              ← monte_carlo.py, projection.py, progression.py
+├── system/                             ← progression.md, progression_state.json
 ├── vault/                              ← API keys (gitignored)
 └── ideas/                              ← future experiments
 ```
