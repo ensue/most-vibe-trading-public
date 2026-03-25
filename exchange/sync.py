@@ -12,9 +12,10 @@ Usage:
     python exchange/sync.py              # sync everything
     python exchange/sync.py --balance    # balance only
     python exchange/sync.py --positions  # positions only
+    python exchange/sync.py --orders     # open/pending orders only
     python exchange/sync.py --trades     # trade history only
 
-Credentials (default): ../vault/bitget-api.env
+Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in this file).
 """
 
 import argparse
@@ -29,7 +30,8 @@ from dotenv import dotenv_values
 
 VAULT_CANDIDATES = [
     Path(__file__).resolve().parent.parent / "vault" / "bitget-api.env",
-    Path.cwd().parent / "vault" / "bitget-api.env",
+    Path(__file__).resolve().parent.parent.parent / "vault" / "bitget-api.env",
+    Path.cwd() / "vault" / "bitget-api.env",
 ]
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -144,7 +146,70 @@ async def fetch_trades(exchange: ccxt.bitget, mode: str, limit: int = 50) -> lis
     return result
 
 
-def generate_snapshot(balance: dict, positions: list, trades: list) -> str:
+async def fetch_open_orders(exchange: ccxt.bitget, mode: str, limit: int = 100) -> list[dict]:
+    """
+    Bitget can expose regular open orders and trigger/plan orders via different params.
+    Query multiple known variants and de-duplicate by order id.
+    """
+    query_params = [
+        {"type": "swap"},
+        {"type": "swap", "stop": True},
+        {"type": "swap", "planType": "normal_plan"},
+        {"type": "swap", "planType": "profit_loss"},
+    ]
+    if mode == "uta":
+        query_params = [{**p, "uta": True} for p in query_params]
+
+    by_id: dict[str, dict] = {}
+    for params in query_params:
+        try:
+            orders = await exchange.fetch_open_orders(None, None, limit, params)
+        except ccxt.BaseError:
+            continue
+
+        for o in orders:
+            order_id = str(o.get("id") or "")
+            if not order_id:
+                continue
+            info = o.get("info") or {}
+            # Bitget often encodes close/open intent in raw fields (tradeSide/posSide),
+            # while normalized side/reduceOnly may be ambiguous for trigger orders.
+            trade_side = (
+                info.get("tradeSide")
+                or info.get("trade_side")
+                or info.get("planType")
+                or "—"
+            )
+            pos_side = info.get("posSide") or info.get("holdSide") or "—"
+            raw_reduce = info.get("reduceOnly")
+            if raw_reduce is None:
+                raw_reduce = info.get("reduce_only")
+            if raw_reduce is None:
+                raw_reduce = o.get("reduceOnly", False)
+            raw_reduce_str = str(raw_reduce).strip().lower()
+            reduce_only = raw_reduce_str in {"true", "1", "yes", "y"} or raw_reduce is True
+            by_id[order_id] = {
+                "id": order_id,
+                "symbol": o.get("symbol", "—"),
+                "side": o.get("side", "—"),
+                "type": o.get("type", "—"),
+                "status": o.get("status", "—"),
+                "price": float(o.get("price") or 0),
+                "stop_price": float(o.get("stopPrice") or 0) if o.get("stopPrice") else None,
+                "amount": float(o.get("amount") or 0),
+                "reduce_only": reduce_only,
+                "trade_side": str(trade_side),
+                "pos_side": str(pos_side),
+                "timestamp": o.get("timestamp"),
+                "datetime": o.get("datetime"),
+            }
+
+    result = list(by_id.values())
+    result.sort(key=lambda x: x["timestamp"] or 0, reverse=True)
+    return result
+
+
+def generate_snapshot(balance: dict, positions: list, open_orders: list, trades: list) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
         f"# Exchange Snapshot",
@@ -182,6 +247,28 @@ def generate_snapshot(balance: dict, positions: list, trades: list) -> str:
     else:
         lines.extend(["## Open Positions", "", "None.", ""])
 
+    if open_orders:
+        lines.extend([
+            "## Open / Pending Orders",
+            "",
+            "| Time | Symbol | Side | TradeSide | PosSide | Type | Status | Price | Stop | Amount | Reduce-only |",
+            "|------|--------|------|-----------|---------|------|--------|-------|------|--------|-------------|",
+        ])
+        for o in open_orders[:100]:
+            dt = o["datetime"] or "—"
+            if len(dt) > 19:
+                dt = dt[:19]
+            stop = f"${o['stop_price']:,.4f}" if o["stop_price"] else "—"
+            price = f"${o['price']:,.4f}" if o["price"] else "—"
+            reduce_only = "yes" if o["reduce_only"] else "no"
+            lines.append(
+                f"| {dt} | {o['symbol']} | {o['side']} | {o['trade_side']} | {o['pos_side']} "
+                f"| {o['type']} | {o['status']} | {price} | {stop} | {o['amount']} | {reduce_only} |"
+            )
+        lines.append("")
+    else:
+        lines.extend(["## Open / Pending Orders", "", "None.", ""])
+
     if trades:
         lines.extend([
             "## Recent Closed Orders (last 50)",
@@ -216,7 +303,7 @@ def save(filename: str, data) -> None:
 
 
 async def main(args: argparse.Namespace) -> None:
-    sync_all = not (args.balance or args.positions or args.trades)
+    sync_all = not (args.balance or args.positions or args.orders or args.trades)
 
     creds = load_credentials()
     exchange = create_exchange(creds)
@@ -228,6 +315,7 @@ async def main(args: argparse.Namespace) -> None:
 
         balance_data = {}
         positions_data = []
+        open_orders_data = []
         trades_data = []
 
         if sync_all or args.balance:
@@ -240,6 +328,11 @@ async def main(args: argparse.Namespace) -> None:
             positions_data = await fetch_positions(exchange, mode)
             save("positions.json", positions_data)
 
+        if sync_all or args.orders:
+            print("Fetching open/pending orders...")
+            open_orders_data = await fetch_open_orders(exchange, mode, limit=100)
+            save("open_orders.json", open_orders_data)
+
         if sync_all or args.trades:
             print("Fetching trade history...")
             trades_data = await fetch_trades(exchange, mode, limit=50)
@@ -247,7 +340,7 @@ async def main(args: argparse.Namespace) -> None:
 
         if sync_all:
             print("Generating snapshot...")
-            snapshot = generate_snapshot(balance_data, positions_data, trades_data)
+            snapshot = generate_snapshot(balance_data, positions_data, open_orders_data, trades_data)
             save("snapshot.md", snapshot)
 
         print("Sync complete.")
@@ -260,6 +353,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sync Bitget exchange data")
     parser.add_argument("--balance", action="store_true", help="Sync balance only")
     parser.add_argument("--positions", action="store_true", help="Sync positions only")
+    parser.add_argument("--orders", action="store_true", help="Sync open/pending orders only")
     parser.add_argument("--trades", action="store_true", help="Sync trade history only")
     args = parser.parse_args()
     asyncio.run(main(args))
