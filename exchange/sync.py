@@ -26,6 +26,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import ccxt.async_support as ccxt
+from aiohttp import ClientSession, TCPConnector
+from aiohttp.resolver import ThreadedResolver
 from dotenv import dotenv_values
 
 VAULT_CANDIDATES = [
@@ -307,6 +309,10 @@ async def main(args: argparse.Namespace) -> None:
 
     creds = load_credentials()
     exchange = create_exchange(creds)
+    resolver = ThreadedResolver()
+    connector = TCPConnector(resolver=resolver)
+    session = ClientSession(connector=connector)
+    exchange.session = session
 
     try:
         print("Connecting to Bitget...")
