@@ -1,7 +1,8 @@
 """
 Exchange data sync (default: Bitget futures).
 
-Pulls balances, open positions, and recent trade history via **ccxt**
+Pulls balances, open positions, open orders, closed orders, and fill-level
+transaction history via **ccxt**
 and stores them as JSON + a human-readable snapshot.
 
 MOST is not Bitget-only: ccxt supports many CEXes. To run on Binance USDM,
@@ -13,7 +14,8 @@ Usage:
     python exchange/sync.py --balance    # balance only
     python exchange/sync.py --positions  # positions only
     python exchange/sync.py --orders     # open/pending orders only
-    python exchange/sync.py --trades     # trade history only
+    python exchange/sync.py --trades     # closed orders only
+    python exchange/sync.py --tx         # fill-level transaction history only
 
 Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in this file).
 """
@@ -211,7 +213,44 @@ async def fetch_open_orders(exchange: ccxt.bitget, mode: str, limit: int = 100) 
     return result
 
 
-def generate_snapshot(balance: dict, positions: list, open_orders: list, trades: list) -> str:
+async def fetch_transactions(exchange: ccxt.bitget, mode: str, limit: int = 200) -> list[dict]:
+    params = {"type": "swap"}
+    if mode == "uta":
+        params["uta"] = True
+
+    try:
+        trades = await exchange.fetch_my_trades(None, None, limit, params)
+    except ccxt.BaseError:
+        return []
+
+    result = []
+    for t in trades:
+        result.append({
+            "id": t.get("id"),
+            "order_id": t.get("order"),
+            "symbol": t.get("symbol"),
+            "side": t.get("side"),
+            "type": t.get("type"),
+            "price": float(t.get("price") or 0),
+            "amount": float(t.get("amount") or 0),
+            "cost": float(t.get("cost") or 0),
+            "fee": float((t.get("fee") or {}).get("cost") or 0),
+            "timestamp": t.get("timestamp"),
+            "datetime": t.get("datetime"),
+            "reduce_only": t.get("reduceOnly", False),
+        })
+
+    result.sort(key=lambda x: x["timestamp"] or 0, reverse=True)
+    return result
+
+
+def generate_snapshot(
+    balance: dict,
+    positions: list,
+    open_orders: list,
+    trades: list,
+    transactions: list,
+) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
         f"# Exchange Snapshot",
@@ -291,6 +330,26 @@ def generate_snapshot(balance: dict, positions: list, open_orders: list, trades:
     else:
         lines.extend(["## Recent Closed Orders", "", "No closed orders found.", ""])
 
+    if transactions:
+        lines.extend([
+            "## Recent Transactions / Fills (last 100)",
+            "",
+            "| Time | Symbol | Side | Type | Price | Amount | Cost | Fee | Order ID |",
+            "|------|--------|------|------|-------|--------|------|-----|----------|",
+        ])
+        for t in transactions[:100]:
+            dt = t["datetime"] or "—"
+            if len(dt) > 19:
+                dt = dt[:19]
+            lines.append(
+                f"| {dt} | {t['symbol']} | {t['side']} | {t['type']} "
+                f"| ${t['price']:,.4f} | {t['amount']} | ${t['cost']:,.2f} "
+                f"| ${t['fee']:,.4f} | {t['order_id'] or '—'} |"
+            )
+        lines.append("")
+    else:
+        lines.extend(["## Recent Transactions / Fills", "", "No transactions found.", ""])
+
     return "\n".join(lines)
 
 
@@ -305,7 +364,7 @@ def save(filename: str, data) -> None:
 
 
 async def main(args: argparse.Namespace) -> None:
-    sync_all = not (args.balance or args.positions or args.orders or args.trades)
+    sync_all = not (args.balance or args.positions or args.orders or args.trades or args.tx)
 
     creds = load_credentials()
     exchange = create_exchange(creds)
@@ -323,6 +382,7 @@ async def main(args: argparse.Namespace) -> None:
         positions_data = []
         open_orders_data = []
         trades_data = []
+        transactions_data = []
 
         if sync_all or args.balance:
             print("Fetching balance...")
@@ -340,13 +400,24 @@ async def main(args: argparse.Namespace) -> None:
             save("open_orders.json", open_orders_data)
 
         if sync_all or args.trades:
-            print("Fetching trade history...")
+            print("Fetching closed-order history...")
             trades_data = await fetch_trades(exchange, mode, limit=50)
             save("trades.json", trades_data)
 
+        if sync_all or args.tx:
+            print("Fetching transaction history...")
+            transactions_data = await fetch_transactions(exchange, mode, limit=200)
+            save("transactions.json", transactions_data)
+
         if sync_all:
             print("Generating snapshot...")
-            snapshot = generate_snapshot(balance_data, positions_data, open_orders_data, trades_data)
+            snapshot = generate_snapshot(
+                balance_data,
+                positions_data,
+                open_orders_data,
+                trades_data,
+                transactions_data,
+            )
             save("snapshot.md", snapshot)
 
         print("Sync complete.")
@@ -360,6 +431,7 @@ if __name__ == "__main__":
     parser.add_argument("--balance", action="store_true", help="Sync balance only")
     parser.add_argument("--positions", action="store_true", help="Sync positions only")
     parser.add_argument("--orders", action="store_true", help="Sync open/pending orders only")
-    parser.add_argument("--trades", action="store_true", help="Sync trade history only")
+    parser.add_argument("--trades", action="store_true", help="Sync closed-order history only")
+    parser.add_argument("--tx", action="store_true", help="Sync fill-level transaction history only")
     args = parser.parse_args()
     asyncio.run(main(args))
