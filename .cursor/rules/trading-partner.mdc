@@ -186,7 +186,7 @@ When the user discusses a trade idea, sketch, or chart with **entry + stop** (nu
 2. In the **same response**, include a compact **Sizing** block:
    - **Risk per 1 unit** = |entry − SL| (state the assumption if entry is a zone)
    - **Raw units** = max_risk / risk_per_unit → **round down** to lot size; note fee/slippage buffer
-   - One explicit line: worst-case **$** at stop with chosen size
+   - One explicit line: worst-case **$** at stop with chosen size; post-entry **PASS** if within **±$3** of stated max risk (`rules.md` Rule 2)
 3. If **multiple TPs** exist or are implied:
    - **Chart convention:** If sketches share the **same entry + same SL** and differ **only** in TP → **one** risk budget (1R), **partials** — see `rules.md` (Rule 3). Do **not** treat those as multiple full positions.
    - If **entry or SL differs** between boxes, **one trade = one risk budget** may **not** hold — call out **stacked risk** unless the user documents one combined plan

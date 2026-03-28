@@ -27,7 +27,7 @@ Minimum 60 seconds between "I see a setup" and "I place the order."
 | First 50 trades | Fixed **____%** of declared capital ($______) = **$____ max risk per trade** |
 | After 50 compliant | Half Kelly on trailing 50-trade stats |
 
-The number is absolute. Not "roughly" or "about." The exact dollar amount is stated before entry.
+The dollar amount is stated before entry. **Verification tolerance:** worst-case loss at the stop may land **within ±$3** of that figure after lot rounding, fees, and fill variance — **PASS** on Rule 2 for post-entry checks. Beyond **+$3** over max → review (oversize).
 
 ### Mental Bankroll Model
 
@@ -67,7 +67,7 @@ Max **dollar risk** for this trade = Rule 2 amount (fixed % of declared capital,
 
 1. **Risk per 1 unit** = `|entry price − stop price|` (use the actual fill assumption for entry).
 2. **Raw size (units)** = `max_risk_dollars / risk_per_unit`.
-3. **Round down** to the exchange’s **lot / contract step** so that worst-case loss at the stop stays **≤** max risk (leave a small buffer for fees and slippage).
+3. **Round down** to the exchange’s **lot / contract step** so that worst-case loss at the stop stays **≤** max risk + **$3 tolerance** (see Rule 2).
 
 **One line to state in the plan:** “If stopped, loss = [N]R at SL ___ with size ___.”
 
@@ -144,6 +144,10 @@ A **hedge** is allowed when it is **not** a second independent bet — a **tempo
 - **Unwind order** — how you flatten (hedge first vs primary) — **before** entry.
 
 If you cannot write the above, treat it as a **second position** (not allowed as a “hedge”).
+
+### Short **bridge** into a limit ladder
+
+If the plan is a **short only until** resting **long bids** fill (or the short closes in the same zone), that is **sequential** — not a two-sided hedge. **Working limits are not a position** until filled. Log bridge short + pointer to the long ladder in one journal note.
 
 ### Still disallowed
 
