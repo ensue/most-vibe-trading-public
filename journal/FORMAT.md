@@ -17,6 +17,14 @@ Leave a **blank line** before a new subsection.
 
 Use `###` headings as row substitutes. Newest-first is fine.
 
+### Chapter trajectory — predictions
+
+In `journal/chapters/chapter-*-live.md`:
+
+- Put the **current** “predicted danger / next-session” block **near the top** (after title metadata), dated.  
+- When you refresh predictions, **move the previous block** to a **`## Prediction archive`** at the **bottom** of the same file — oldest archive entries first, newest archive entries last.  
+- Do **not** delete old predictions; archive them for review.
+
 ### YYYY-MM-DD · SYMBOL · TF
 
 - **Observation:** …
