@@ -27,6 +27,7 @@ Run these two commands (can be parallel):
 Read ALL of the following files in a single parallel tool call batch:
 - `context.md` — current state, streak, risk phase, session notes
 - `exchange/data/snapshot.md` — just-synced exchange state (balances, open positions, recent trades)
+- `exchange/data/accounting.md` — if present after sync: USDT deposits/withdrawals vs swap equity, signed R vs $40 unit (see `exchange/sync.py`)
 - `tools/monte_carlo_report.md` — just-generated probability distribution
 - `journal/positions/_summary.md` — trade statistics and recent positions
 - `rules.md` — the iron rules

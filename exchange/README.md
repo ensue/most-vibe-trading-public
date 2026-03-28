@@ -2,7 +2,7 @@
 
 ## Default: Bitget
 
-The shipped `sync.py` is wired for **Bitget USDT-margined futures** (`defaultType: swap`). Credentials live in `vault/bitget-api.env`.
+The shipped `sync.py` is wired for **Bitget USDT-margined futures** (`defaultType: swap`). Credentials live in `vault/bitget-api.env` (workspace root in this layout).
 
 ## Other CEXes — intentionally simple
 
@@ -19,6 +19,24 @@ Typical fork of `sync.py` for another exchange:
 | 5 | Rename or duplicate **`vault/bitget-api.env`** → e.g. `vault/exchange.env` and map env var names to whatever that CEX expects (often still `apiKey`, `secret`, sometimes `password`). |
 
 After that, **output shape stays the same**: JSON + `snapshot.md` under `exchange/data/`. The rest of MOST (Cursor rules, journal, tools) stays untouched.
+
+## Outputs (Bitget, `exchange/data/`)
+
+| File | Purpose |
+|------|---------|
+| `balances.json` | Current swap USDT balance |
+| `positions.json` | Open positions |
+| `open_orders.json` | Pending / trigger orders |
+| `trades.json` | Recent closed orders |
+| `transactions.json` | Fill-level history (when API returns) |
+| `snapshot.md` | Human-readable roll-up of the above |
+| **`funding.json`** | All-time USDT **deposits** and **withdrawals** (ccxt paginate) + summary |
+| **`accounting.md`** | **Net external** vs **current swap equity** → **signed R** (÷ $40 rule unit vs `most/rules.md`) |
+| **`balance_history.jsonl`** | Append-only **one line per sync** (timestamp + total/free/used) |
+
+Full sync runs funding + accounting by default; use `--no-funding` to skip deposit/withdrawal API calls.
+
+**Note:** `exchange/data/` is gitignored (secrets / live balances). **Ledger files exist on your machine**; they are not in git unless you change `.gitignore`.
 
 ## Multi-account or multi-venue later
 

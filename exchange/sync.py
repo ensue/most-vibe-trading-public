@@ -10,14 +10,20 @@ Bybit, OKX, etc., fork this file — swap the exchange class, constructor
 options, and balance/position params. See `exchange/README.md`.
 
 Usage:
-    python exchange/sync.py              # sync everything
+    python exchange/sync.py              # sync everything (+ USDT funding + accounting)
     python exchange/sync.py --balance    # balance only
     python exchange/sync.py --positions  # positions only
     python exchange/sync.py --orders     # open/pending orders only
     python exchange/sync.py --trades     # closed orders only
     python exchange/sync.py --tx         # fill-level transaction history only
+    python exchange/sync.py --no-funding # full sync but skip deposit/withdrawal API (faster)
 
 Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in this file).
+
+Accounting:
+    Each successful sync appends `data/balance_history.jsonl`. Full sync also pulls all-time
+    USDT `fetch_deposits` / `fetch_withdrawals` (ccxt paginate) and writes `data/funding.json`
+    plus `data/accounting.md` (net external vs swap equity → signed R vs Rule 2 unit).
 """
 
 import argparse
@@ -39,6 +45,11 @@ VAULT_CANDIDATES = [
 ]
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
+
+# Mirrors `most/rules.md` calibration — not exchange balance.
+MENTAL_BANKROLL_USD = 2000.0
+R_UNIT_USD = 40.0
+BALANCE_HISTORY_FILE = "balance_history.jsonl"
 
 
 def load_credentials() -> dict[str, str]:
@@ -244,12 +255,187 @@ async def fetch_transactions(exchange: ccxt.bitget, mode: str, limit: int = 200)
     return result
 
 
+def _tx_confirmed_success(tx: dict) -> bool:
+    s = (tx.get("status") or "").lower()
+    return s in ("ok", "success", "completed")
+
+
+def _serialize_funding_tx(tx: dict) -> dict:
+    fee = tx.get("fee")
+    if isinstance(fee, dict):
+        fee_cost = float(fee.get("cost") or 0)
+    else:
+        fee_cost = float(fee or 0)
+    return {
+        "id": str(tx.get("id") or ""),
+        "timestamp": tx.get("timestamp"),
+        "datetime": tx.get("datetime"),
+        "amount": float(tx.get("amount") or 0),
+        "status": tx.get("status"),
+        "fee": fee_cost,
+    }
+
+
+# Bitget rejects deposit/withdraw lists if startTime→endTime span > 90 days (API error 00001).
+_NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000
+# Each window can trigger many paginated calls; cap how far back we walk (≈12 years).
+_MAX_FUNDING_WINDOWS = 48
+
+
+async def _fetch_usdt_tx_windowed(
+    exchange: ccxt.bitget,
+    method_name: str,
+) -> tuple[list, str | None]:
+    """
+    Walk backward in <=90d windows until epoch or max windows. Deduplicate by id.
+    """
+    fetch_fn = (
+        exchange.fetch_deposits if method_name == "deposits" else exchange.fetch_withdrawals
+    )
+    merged: list = []
+    seen: set[str] = set()
+    end_ms = exchange.milliseconds()
+    last_err: str | None = None
+
+    for _ in range(_MAX_FUNDING_WINDOWS):
+        start_ms = max(1, end_ms - _NINETY_DAYS_MS)
+        try:
+            chunk = await fetch_fn(
+                "USDT",
+                since=start_ms,
+                limit=100,
+                params={"until": end_ms, "paginate": True},
+            )
+        except ccxt.BaseError as e:
+            last_err = f"{method_name}: {e}"
+            break
+        for t in chunk:
+            tid = str(t.get("id") or t.get("txid") or "")
+            key = tid or f"{t.get('timestamp')}-{t.get('amount')}"
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(t)
+        if start_ms <= 1:
+            break
+        end_ms = start_ms - 1
+
+    return merged, last_err
+
+
+async def fetch_usdt_deposits_and_withdrawals(exchange: ccxt.bitget) -> tuple[list, list, str | None]:
+    """
+    All-time USDT deposits and withdrawals (Bitget spot wallet API).
+    Bitget caps each query to a 90-day window; we page backward in chunks and merge.
+    """
+    deposits, err_d = await _fetch_usdt_tx_windowed(exchange, "deposits")
+    withdrawals, err_w = await _fetch_usdt_tx_windowed(exchange, "withdrawals")
+    err_parts = [x for x in (err_d, err_w) if x]
+    err = "; ".join(err_parts) if err_parts else None
+    return deposits, withdrawals, err
+
+
+def build_funding_summary(
+    deposits: list,
+    withdrawals: list,
+    swap_equity: float,
+) -> dict:
+    d_sum = sum(
+        float(x.get("amount") or 0) for x in deposits if _tx_confirmed_success(x)
+    )
+    w_sum = sum(
+        float(x.get("amount") or 0) for x in withdrawals if _tx_confirmed_success(x)
+    )
+    net_ext = d_sum - w_sum
+    signed_r = (swap_equity - net_ext) / R_UNIT_USD
+    return {
+        "deposits_usdt_counted": round(d_sum, 8),
+        "withdrawals_usdt_counted": round(w_sum, 8),
+        "net_external_usdt": round(net_ext, 8),
+        "current_swap_equity_usd": round(swap_equity, 8),
+        "equity_minus_net_external_usdt": round(swap_equity - net_ext, 8),
+        "cumulative_r_signed_vs_rule_unit": round(signed_r, 4),
+        "mental_bankroll_usd": MENTAL_BANKROLL_USD,
+        "rule_r_unit_usd": R_UNIT_USD,
+        "caveat": (
+            "Net external uses completed on-chain (or internal) deposits/withdrawals from Bitget "
+            "wallet API. If USDT was moved only inside Bitget (spot↔futures), totals can still "
+            "reconcile with swap equity; if some history is outside API range, numbers drift."
+        ),
+    }
+
+
+def append_balance_snapshot(balance: dict) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    path = DATA_DIR / BALANCE_HISTORY_FILE
+    row = {
+        "synced_at": balance.get("synced_at"),
+        "total": balance.get("total"),
+        "free": balance.get("free"),
+        "used": balance.get("used"),
+    }
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    print(f"  appended {path.relative_to(Path(__file__).resolve().parent.parent)}")
+
+
+def generate_accounting_md(summary: dict | None, funding_error: str | None) -> str:
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [
+        "# Exchange accounting (USDT)",
+        "",
+        f"Generated: {ts}",
+        "",
+        "## Reference (MOST rules)",
+        "",
+        f"- Declared **mental bankroll**: **${MENTAL_BANKROLL_USD:,.0f}** (`most/rules.md`)",
+        f"- Calibration **1R** = **${R_UNIT_USD:,.0f}** (first 50 trades, fixed %)",
+        "",
+    ]
+    if funding_error:
+        lines.extend([
+            "## Funding API",
+            "",
+            f"**Error:** {funding_error}",
+            "",
+        ])
+    if summary is None:
+        lines.extend([
+            "_Funding summary unavailable (see error above or run sync without `--no-funding`)._",
+            "",
+        ])
+        return "\n".join(lines)
+
+    lines.extend([
+        "## Funding vs swap equity (Bitget API)",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| Completed USDT **deposits** (sum) | ${summary['deposits_usdt_counted']:,.2f} |",
+        f"| Completed USDT **withdrawals** (sum) | ${summary['withdrawals_usdt_counted']:,.2f} |",
+        f"| **Net external** (deposits − withdrawals) | ${summary['net_external_usdt']:,.2f} |",
+        f"| **Current swap USDT equity** (this sync) | ${summary['current_swap_equity_usd']:,.2f} |",
+        f"| Equity − net external | ${summary['equity_minus_net_external_usdt']:,.2f} |",
+        f"| **Signed R** (÷ ${summary['rule_r_unit_usd']:.0f} rule unit) | **{summary['cumulative_r_signed_vs_rule_unit']:.2f} R** |",
+        "",
+        "### Reading signed R",
+        "",
+        "- **Positive:** swap equity **above** net external funding (cumulative trading outcome positive vs cash in/out).",
+        "- **Negative:** swap equity **below** net external funding (cumulative loss vs cash in/out, in **R units** at the Rule 2 calibration).",
+        "",
+        f"_{summary['caveat']}_",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def generate_snapshot(
     balance: dict,
     positions: list,
     open_orders: list,
     trades: list,
     transactions: list,
+    accounting_md: str | None = None,
 ) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
@@ -350,6 +536,9 @@ def generate_snapshot(
     else:
         lines.extend(["## Recent Transactions / Fills", "", "No transactions found.", ""])
 
+    if accounting_md:
+        lines.extend(["", "---", "", accounting_md.strip(), ""])
+
     return "\n".join(lines)
 
 
@@ -383,11 +572,32 @@ async def main(args: argparse.Namespace) -> None:
         open_orders_data = []
         trades_data = []
         transactions_data = []
+        accounting_md: str | None = None
 
         if sync_all or args.balance:
             print("Fetching balance...")
             balance_data = await fetch_balance(exchange, mode)
             save("balances.json", balance_data)
+            append_balance_snapshot(balance_data)
+
+        if sync_all and balance_data and not args.no_funding:
+            print("Fetching USDT deposits / withdrawals (paginated)...")
+            deposits_raw, withdrawals_raw, funding_err = await fetch_usdt_deposits_and_withdrawals(
+                exchange
+            )
+            summary = build_funding_summary(
+                deposits_raw, withdrawals_raw, float(balance_data["total"])
+            )
+            funding_payload = {
+                "updated_at": balance_data.get("synced_at"),
+                "deposits": [_serialize_funding_tx(t) for t in deposits_raw],
+                "withdrawals": [_serialize_funding_tx(t) for t in withdrawals_raw],
+                "summary": summary,
+                "api_error": funding_err,
+            }
+            save("funding.json", funding_payload)
+            accounting_md = generate_accounting_md(summary, funding_err)
+            save("accounting.md", accounting_md)
 
         if sync_all or args.positions:
             print("Fetching positions...")
@@ -417,6 +627,7 @@ async def main(args: argparse.Namespace) -> None:
                 open_orders_data,
                 trades_data,
                 transactions_data,
+                accounting_md=accounting_md,
             )
             save("snapshot.md", snapshot)
 
@@ -433,5 +644,10 @@ if __name__ == "__main__":
     parser.add_argument("--orders", action="store_true", help="Sync open/pending orders only")
     parser.add_argument("--trades", action="store_true", help="Sync closed-order history only")
     parser.add_argument("--tx", action="store_true", help="Sync fill-level transaction history only")
+    parser.add_argument(
+        "--no-funding",
+        action="store_true",
+        help="Skip USDT deposit/withdrawal fetch and accounting files (faster)",
+    )
     args = parser.parse_args()
     asyncio.run(main(args))
