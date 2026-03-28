@@ -19,6 +19,7 @@ Usage:
     python exchange/sync.py --no-funding # full sync but skip deposit/withdrawal API (faster)
     python exchange/sync.py --no-ledger  # full sync but skip swap ledger / balance timeline (faster)
     python exchange/sync.py --ledger-full-history  # ledger: all 90-day windows (slow; default = last 90d)
+    python exchange/sync.py --closed-orders-full   # all closed swap orders (paginated)
 
 Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in this file).
 
@@ -98,6 +99,71 @@ def load_accounting_config() -> dict[str, float | None]:
     return {"mental_bankroll_usd": mental, "r_unit_usd": r_unit}
 
 
+def _parse_float_field(v) -> float | None:
+    if v is None:
+        return None
+    s = str(v).strip()
+    if s == "" or s.lower() == "null":
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def realized_pnl_from_bitget_order_info(info: dict) -> float | None:
+    """
+    Bitget swap order history includes realized PnL on **close** fills in raw `info`.
+    CCXT does not normalize this field; read common keys (mix + UTA).
+    """
+    if not info:
+        return None
+    for key in (
+        "totalProfits",
+        "totalprofits",
+        "cumProfit",
+        "cum_profit",
+        "profit",
+        "realizedPnl",
+        "realizedPnl",
+    ):
+        p = _parse_float_field(info.get(key))
+        if p is not None:
+            return p
+    return None
+
+
+def generate_closed_orders_pnl_md(trades: list[dict]) -> str:
+    """One markdown table: every closed swap order row with realized PnL when the API provides it."""
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [
+        "# Closed swap orders (realized PnL)",
+        "",
+        f"Generated: {ts}",
+        "",
+        "Source: Bitget **closed order history** via ccxt `fetch_closed_orders` (`type=swap`). "
+        "**Realized PnL** is read from raw order `info` (e.g. `totalProfits`) when present — "
+        "typically **non-zero on closes** (`tradeSide=close` / reduce-only); opens often show `0` or empty.",
+        "",
+        "| Time | Order ID | Symbol | Side | tradeSide | posSide | Type | Price | Amount | Fee (USDT) | Realized PnL (USDT) |",
+        "|------|----------|--------|------|-----------|---------|------|-------|--------|------------|---------------------|",
+    ]
+    for t in trades:
+        dt = t.get("datetime") or "—"
+        if isinstance(dt, str) and len(dt) > 19:
+            dt = dt[:19]
+        oid = str(t.get("id") or "—")
+        pnl = t.get("realized_pnl")
+        pnl_s = f"{pnl:,.4f}" if isinstance(pnl, (int, float)) else "—"
+        lines.append(
+            f"| {dt} | {oid} | {t.get('symbol', '—')} | {t.get('side', '—')} | "
+            f"{t.get('trade_side', '—')} | {t.get('pos_side', '—')} | {t.get('type', '—')} | "
+            f"${t.get('price', 0):,.4f} | {t.get('amount', 0)} | ${t.get('fee', 0):,.4f} | {pnl_s} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def load_credentials() -> dict[str, str]:
     for path in VAULT_CANDIDATES:
         if path.exists():
@@ -175,10 +241,17 @@ async def fetch_positions(exchange: ccxt.bitget, mode: str) -> list[dict]:
     return result
 
 
-async def fetch_trades(exchange: ccxt.bitget, mode: str, limit: int = 50) -> list[dict]:
-    params = {"type": "swap"}
+async def fetch_trades(
+    exchange: ccxt.bitget,
+    mode: str,
+    limit: int = 100,
+    paginate: bool = False,
+) -> list[dict]:
+    params: dict = {"type": "swap"}
     if mode == "uta":
         params["uta"] = True
+    if paginate:
+        params["paginate"] = True
 
     try:
         orders = await exchange.fetch_closed_orders(None, None, limit, params)
@@ -189,6 +262,8 @@ async def fetch_trades(exchange: ccxt.bitget, mode: str, limit: int = 50) -> lis
     for o in orders:
         if o["status"] != "closed":
             continue
+        info = o.get("info") or {}
+        rp = realized_pnl_from_bitget_order_info(info)
         result.append({
             "id": o["id"],
             "symbol": o["symbol"],
@@ -201,6 +276,9 @@ async def fetch_trades(exchange: ccxt.bitget, mode: str, limit: int = 50) -> lis
             "timestamp": o["timestamp"],
             "datetime": o["datetime"],
             "reduce_only": o.get("reduceOnly", False),
+            "realized_pnl": rp,
+            "trade_side": str(info.get("tradeSide") or info.get("trade_side") or "—"),
+            "pos_side": str(info.get("posSide") or info.get("holdSide") or "—"),
         })
 
     result.sort(key=lambda x: x["timestamp"] or 0, reverse=True)
@@ -898,19 +976,22 @@ def generate_snapshot(
 
     if trades:
         lines.extend([
-            "## Recent Closed Orders (last 50)",
+            "## Recent Closed Orders",
             "",
-            "| Time | Symbol | Side | Type | Price | Amount | Cost | Fee |",
-            "|------|--------|------|------|-------|--------|------|-----|",
+            "_Full table with the same rows: `data/closed_orders_pnl.md`._",
+            "",
+            "| Time | Symbol | Side | tradeSide | posSide | Type | Price | Amount | Fee | Realized PnL |",
+            "|------|--------|------|-----------|---------|------|-------|--------|-----|--------------|",
         ])
         for t in trades[:50]:
             dt = t["datetime"] or "—"
             if len(dt) > 19:
                 dt = dt[:19]
+            pnl = t.get("realized_pnl")
+            pnl_s = f"${pnl:,.4f}" if isinstance(pnl, (int, float)) else "—"
             lines.append(
-                f"| {dt} | {t['symbol']} | {t['side']} | {t['type']} "
-                f"| ${t['price']:,.4f} | {t['amount']} | ${t['cost']:,.2f} "
-                f"| ${t['fee']:,.4f} |"
+                f"| {dt} | {t['symbol']} | {t['side']} | {t.get('trade_side', '—')} | {t.get('pos_side', '—')} "
+                f"| {t['type']} | ${t['price']:,.4f} | {t['amount']} | ${t['fee']:,.4f} | {pnl_s} |"
             )
         lines.append("")
     else:
@@ -1048,8 +1129,14 @@ async def main(args: argparse.Namespace) -> None:
 
         if sync_all or args.trades:
             print("Fetching closed-order history...")
-            trades_data = await fetch_trades(exchange, mode, limit=50)
+            trades_data = await fetch_trades(
+                exchange,
+                mode,
+                limit=args.closed_orders_limit,
+                paginate=args.closed_orders_full,
+            )
             save("trades.json", trades_data)
+            save("closed_orders_pnl.md", generate_closed_orders_pnl_md(trades_data))
 
         if sync_all or args.tx:
             print("Fetching transaction history...")
@@ -1096,6 +1183,18 @@ if __name__ == "__main__":
         "--ledger-full-history",
         action="store_true",
         help="Ledger: walk all 90-day windows (slow); default is last 90 days only",
+    )
+    parser.add_argument(
+        "--closed-orders-full",
+        action="store_true",
+        help="Closed swap orders: paginate until all history is fetched (more API calls)",
+    )
+    parser.add_argument(
+        "--closed-orders-limit",
+        type=int,
+        default=100,
+        metavar="N",
+        help="Page size for closed orders (default 100; ignored when --closed-orders-full)",
     )
     args = parser.parse_args()
     asyncio.run(main(args))

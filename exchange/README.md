@@ -27,7 +27,8 @@ After that, **output shape stays the same**: JSON + `snapshot.md` under `exchang
 | `balances.json` | Current swap USDT balance |
 | `positions.json` | Open positions |
 | `open_orders.json` | Pending / trigger orders |
-| `trades.json` | Recent closed orders |
+| `trades.json` | Closed swap orders + **`realized_pnl`** (from Bitget raw `info`, e.g. `totalProfits`) |
+| **`closed_orders_pnl.md`** | **One table** — same rows as `trades.json`, all columns including realized PnL |
 | `transactions.json` | Fill-level history (when API returns) |
 | `snapshot.md` | Human-readable roll-up of the above |
 | **`funding.json`** | All-time USDT **deposits** and **withdrawals** (ccxt paginate) + summary |
@@ -45,6 +46,8 @@ After that, **output shape stays the same**: JSON + `snapshot.md` under `exchang
 Copy `exchange/accounting_config.example.json` → **`exchange/accounting_config.json`** (gitignored) and set **`mental_bankroll_usd`** and **`r_unit_usd`** to match your `rules.md`. Alternatively set **`MOST_MENTAL_BANKROLL_USD`** and **`MOST_R_UNIT_USD`** in `vault/bitget-api.env` (overrides JSON). If unset, USD columns still populate; **signed R** is omitted.
 
 Full sync runs funding + accounting by default; use `--no-funding` to skip deposit/withdrawal API calls.
+
+**Closed orders:** Default is **one page** (`--closed-orders-limit`, default 100). Use **`--closed-orders-full`** to paginate through **all** closed swap orders (slower). Realized PnL is whatever Bitget attaches to each order row; opens often show `0` or `—`.
 
 **Note:** `exchange/data/` is gitignored (secrets / live balances). **Ledger files exist on your machine**; they are not in git unless you change `.gitignore`.
 
