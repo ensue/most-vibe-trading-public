@@ -31,7 +31,7 @@ Run these two commands (can be parallel):
 Read ALL of the following files in a single parallel tool call batch:
 - `context.md` — current state, streak, risk phase, session notes
 - `journal/chapters/chapter-*-live.md` — the **current** chapter's live trajectory (find the highest-numbered `chapter-N-live.md`)
-- `exchange/data/snapshot.md` — just-synced exchange state (balances, open positions, recent trades)
+- `exchange/data/snapshot.md` — just-synced exchange state; **read `# Reconciliation & coverage` first** (coverage warnings + ledger close bills), then balances/positions/orders
 - `tools/monte_carlo_report.md` — just-generated probability distribution
 - `journal/positions/_summary.md` — trade statistics and recent positions
 - `rules.md` — the iron rules

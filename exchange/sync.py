@@ -36,6 +36,14 @@ Balance timeline (swap USDT):
     that bill (trade PnL, fees, funding, transfers). Writes `data/balance_timeline.jsonl` and
     `data/balance_timeline.md`. Not identical to “one row per order” if one order has multiple
     fills/bills — use `order_id` / `bill_id` from raw `info` when the API provides them.
+
+Reconciliation digest:
+    Each full sync writes **`data/reconciliation.json`** and prepends **`# Reconciliation & coverage`**
+    to **`snapshot.md`**: interpretation order (positions → orders → ledger → closed orders → funding → fills),
+    **warnings** when data is truncated, and a **recent close-bill** table from ledger (`close_short`,
+    `burst_*`, `force_*`) so **stops** are visible even when `fetch_closed_orders` is incomplete.
+    **Closed orders:** full sync **paginates all pages** unless `--closed-orders-fast`.
+    **Fills:** Bitget requires per-symbol `fetch_my_trades`; symbols = union(positions, open orders, recent closes).
 """
 
 import argparse
@@ -316,36 +324,230 @@ async def fetch_open_orders(exchange: ccxt.bitget, mode: str, limit: int = 100) 
     return result
 
 
-async def fetch_transactions(exchange: ccxt.bitget, mode: str, limit: int = 200) -> list[dict]:
-    params = {"type": "swap"}
+def collect_symbols_for_fills(
+    positions: list[dict],
+    open_orders: list[dict],
+    closed_orders: list[dict],
+) -> list[str]:
+    """Bitget `fetchMyTrades` requires a symbol — union of live interest from positions, working orders, recent closes."""
+    syms: set[str] = set()
+    for p in positions:
+        s = p.get("symbol")
+        if s:
+            syms.add(str(s))
+    for o in open_orders:
+        s = o.get("symbol")
+        if s and str(s) not in ("", "—"):
+            syms.add(str(s))
+    for t in closed_orders:
+        s = t.get("symbol")
+        if s:
+            syms.add(str(s))
+    return sorted(syms)
+
+
+async def fetch_transactions_for_symbols(
+    exchange: ccxt.bitget,
+    mode: str,
+    symbols: list[str],
+    limit_per_symbol: int = 100,
+) -> tuple[list[dict], str | None]:
+    """
+    Fill-level history. Bitget rejects `fetch_my_trades(None, ...)` — query each symbol.
+    Returns (merged_trades, first_error_or_none).
+    """
+    params: dict = {"type": "swap"}
     if mode == "uta":
         params["uta"] = True
 
-    try:
-        trades = await exchange.fetch_my_trades(None, None, limit, params)
-    except ccxt.BaseError as e:
-        print(f"  WARNING: fetch_my_trades failed: {e}")
-        return []
+    if not symbols:
+        return [], "no_symbols"
 
-    result = []
-    for t in trades:
-        result.append({
-            "id": t.get("id"),
-            "order_id": t.get("order"),
-            "symbol": t.get("symbol"),
-            "side": t.get("side"),
-            "type": t.get("type"),
-            "price": float(t.get("price") or 0),
-            "amount": float(t.get("amount") or 0),
-            "cost": float(t.get("cost") or 0),
-            "fee": float((t.get("fee") or {}).get("cost") or 0),
-            "timestamp": t.get("timestamp"),
-            "datetime": t.get("datetime"),
-            "reduce_only": t.get("reduceOnly", False),
-        })
+    merged: list[dict] = []
+    seen: set[str] = set()
+    first_err: str | None = None
+    for sym in symbols:
+        try:
+            batch = await exchange.fetch_my_trades(sym, None, limit_per_symbol, params)
+        except ccxt.BaseError as e:
+            if first_err is None:
+                first_err = f"{sym}: {e}"
+            continue
+        for t in batch:
+            tid = str(t.get("id") or "")
+            oid = str(t.get("order") or "")
+            key = f"{tid}|{oid}|{t.get('timestamp')}"
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append({
+                "id": t.get("id"),
+                "order_id": t.get("order"),
+                "symbol": t.get("symbol"),
+                "side": t.get("side"),
+                "type": t.get("type"),
+                "price": float(t.get("price") or 0),
+                "amount": float(t.get("amount") or 0),
+                "cost": float(t.get("cost") or 0),
+                "fee": float((t.get("fee") or {}).get("cost") or 0),
+                "timestamp": t.get("timestamp"),
+                "datetime": t.get("datetime"),
+                "reduce_only": t.get("reduceOnly", False),
+            })
 
-    result.sort(key=lambda x: x["timestamp"] or 0, reverse=True)
-    return result
+    merged.sort(key=lambda x: x.get("timestamp") or 0, reverse=True)
+    return merged, first_err
+
+
+# Ledger business types that indicate position reduction / close / liquidation-style events (swap bills).
+_CLOSE_BILL_TYPES: frozenset[str] = frozenset({
+    "close_long",
+    "close_short",
+    "force_close_long",
+    "force_close_short",
+    "burst_long_loss_query",
+    "burst_short_loss_query",
+})
+
+
+def extract_ledger_business_type(entry: dict) -> str:
+    info = entry.get("info") or {}
+    return str(info.get("businessType") or entry.get("type") or "")
+
+
+def build_reconciliation_digest(
+    ledger_entries: list | None,
+    funding_summary: dict | None,
+    funding_err: str | None,
+    closed_orders_count: int,
+    closed_orders_paginated: bool,
+    fills_rows: int,
+    fill_symbols: list[str],
+    fill_fetch_err: str | None,
+    ledger_err: str | None,
+    ledger_span: str,
+) -> tuple[str, dict]:
+    """
+    Human + machine summary: what sync covered, how to interpret, and recent close-bills from ledger.
+    """
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    warnings: list[str] = []
+    if not closed_orders_paginated:
+        warnings.append(
+            "Closed orders: **single page only** — older closes (e.g. stops) may be missing from `trades.json`. "
+            "Use full sync without `--closed-orders-fast`."
+        )
+    if fills_rows == 0 and fill_symbols:
+        warnings.append(
+            "Fills: **0 rows** despite symbols — check API error; Bitget requires per-symbol `fetch_my_trades`."
+        )
+    elif fills_rows == 0 and not fill_symbols:
+        warnings.append(
+            "Fills: **no symbols** to query — no open position/order/closed order to anchor symbols (flat account)."
+        )
+    if fill_fetch_err:
+        warnings.append(f"Fills partial error: `{fill_fetch_err}`")
+    if ledger_err:
+        warnings.append(f"Ledger API: `{ledger_err}`")
+    if ledger_span == "last_90d_only":
+        warnings.append(
+            "Ledger timeline: **last 90 days** only (default). Use `--ledger-full-history` for older bills."
+        )
+    if ledger_span == "skipped":
+        warnings.append("Ledger: **skipped** (`--no-ledger`) — close-bill table below is empty.")
+
+    lines = [
+        "# Reconciliation & coverage",
+        "",
+        f"Generated: {ts}",
+        "",
+        "## How to read this sync (order of trust)",
+        "",
+        "1. **`positions.json` / snapshot table** — **current** net exposure (ground truth for size/side).",
+        "2. **`open_orders.json` / snapshot** — **resting** intent (limits, triggers, stops **not yet** filled).",
+        "3. **`balance_timeline` / ledger bills** — **cashflow per bill** (closes, fees, transfers); use **`businessType`** "
+        "rows below for **stop/close/liq** when order history is ambiguous.",
+        "4. **`trades.json` / `closed_orders_pnl.md`** — exchange **order** history; must be **paginated** or old stops drop off.",
+        "5. **`funding.json` / accounting** — **on-chain-style** deposits/withdrawals (spot wallet API), not per-fill.",
+        "6. **`transactions.json`** — **fill-level** legs (Bitget: **per-symbol** fetch merged here).",
+        "",
+        "## Coverage (this run)",
+        "",
+        "| Source | Rows / notes |",
+        "|--------|----------------|",
+        f"| Closed swap **orders** | **{closed_orders_count}** (paginated: **{'yes' if closed_orders_paginated else 'no'}**) |",
+        f"| Fill **legs** (`transactions.json`) | **{fills_rows}** (symbols queried: **{len(fill_symbols)}**) |",
+        f"| Ledger **bills** | span: **`{ledger_span}`** |",
+    ]
+    if funding_summary:
+        lines.append(
+            f"| Deposits − withdrawals (all-time, completed) | "
+            f"net **${funding_summary.get('net_external_usdt', 0):,.2f}** vs equity |"
+        )
+    elif funding_err:
+        lines.append("| Funding | **error** (see `accounting.md`) |")
+    lines.append("")
+
+    if warnings:
+        lines.extend(["## Warnings", ""])
+        for w in warnings:
+            lines.append(f"- {w}")
+        lines.append("")
+
+    # Recent close-style bills from ledger (newest first)
+    close_rows: list[dict] = []
+    if ledger_entries:
+        for e in ledger_entries:
+            bt = extract_ledger_business_type(e)
+            if bt in _CLOSE_BILL_TYPES:
+                info = e.get("info") or {}
+                sym = str(info.get("symbol") or info.get("symbolName") or "—")
+                oid = str(info.get("orderId") or info.get("order_id") or info.get("tradeId") or "—")
+                dt = e.get("datetime") or "—"
+                if isinstance(dt, str) and len(dt) > 19:
+                    dt = dt[:19]
+                d = ledger_net_usdt_delta(e)
+                close_rows.append({
+                    "datetime": dt,
+                    "business_type": bt,
+                    "symbol": sym,
+                    "delta_usdt": round(d, 4),
+                    "order_ref": oid[:20],
+                    "_ts": int(e.get("timestamp") or 0),
+                })
+        close_rows.sort(key=lambda x: x.get("_ts") or 0, reverse=True)
+
+    lines.extend([
+        "## Recent ledger bills (close / force / burst — newest first)",
+        "",
+        "_These rows come from **mix account bills**, not from `fetch_closed_orders`. Use them to spot **stops** "
+        "when the order table is incomplete._",
+        "",
+        "| Time (UTC) | businessType | Symbol | Δ USDT | order ref |",
+        "|--------------|--------------|--------|--------|-----------|",
+    ])
+    for r in close_rows[:40]:
+        lines.append(
+            f"| {r['datetime']} | {r['business_type']} | {r['symbol']} | {r['delta_usdt']:+,.4f} | {r['order_ref']} |"
+        )
+    if not close_rows:
+        lines.append("| — | — | — | — | — |")
+    lines.append("")
+
+    bills_out = [{k: v for k, v in x.items() if k != "_ts"} for x in close_rows[:40]]
+    machine = {
+        "generated_at": ts,
+        "closed_orders_count": closed_orders_count,
+        "closed_orders_paginated": closed_orders_paginated,
+        "fills_rows": fills_rows,
+        "fill_symbols_queried": fill_symbols,
+        "fill_fetch_err": fill_fetch_err,
+        "ledger_err": ledger_err,
+        "ledger_span": ledger_span,
+        "warnings": warnings,
+        "recent_close_bills": bills_out,
+    }
+    return "\n".join(lines), machine
 
 
 def _tx_confirmed_success(tx: dict) -> bool:
@@ -883,6 +1085,7 @@ def generate_snapshot(
     transactions: list,
     accounting_md: str | None = None,
     balance_timeline_md: str | None = None,
+    reconciliation_md: str | None = None,
 ) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
@@ -890,6 +1093,11 @@ def generate_snapshot(
         f"",
         f"Synced: {ts}",
         f"",
+    ]
+    if reconciliation_md:
+        lines.extend([reconciliation_md.strip(), "", "---", ""])
+
+    lines.extend([
         f"## Balance",
         f"",
         f"| Metric | Value |",
@@ -898,7 +1106,7 @@ def generate_snapshot(
         f"| Free | ${balance['free']:,.2f} |",
         f"| In positions | ${balance['used']:,.2f} |",
         f"",
-    ]
+    ])
 
     if positions:
         lines.extend([
@@ -1025,8 +1233,12 @@ async def main(args: argparse.Namespace) -> None:
         open_orders_data = []
         trades_data = []
         transactions_data = []
+        ledger_raw: list = []
+        ledger_err: str | None = None
         accounting_md: str | None = None
         balance_timeline_md: str | None = None
+        funding_summary_for_recon: dict | None = None
+        funding_err_for_recon: str | None = None
         acc_cfg = load_accounting_config()
 
         if sync_all or args.balance:
@@ -1062,6 +1274,8 @@ async def main(args: argparse.Namespace) -> None:
                 acc_cfg["r_unit_usd"],
             )
             save("accounting.md", accounting_md)
+            funding_summary_for_recon = summary
+            funding_err_for_recon = funding_err
 
         if sync_all and balance_data and not args.no_ledger:
             print("Fetching swap USDT ledger (balance timeline)...")
@@ -1096,21 +1310,61 @@ async def main(args: argparse.Namespace) -> None:
             open_orders_data = await fetch_open_orders(exchange, mode, limit=100)
             save("open_orders.json", open_orders_data)
 
+        fill_symbols: list[str] = []
+        tx_fetch_err: str | None = None
+
+        paginate_closed = False
+        if sync_all:
+            paginate_closed = not args.closed_orders_fast
+        elif args.trades:
+            paginate_closed = args.closed_orders_full
+
         if sync_all or args.trades:
             print("Fetching closed-order history...")
             trades_data = await fetch_trades(
                 exchange,
                 mode,
                 limit=args.closed_orders_limit,
-                paginate=args.closed_orders_full,
+                paginate=paginate_closed,
             )
             save("trades.json", trades_data)
             save("closed_orders_pnl.md", generate_closed_orders_pnl_md(trades_data))
 
         if sync_all or args.tx:
-            print("Fetching transaction history...")
-            transactions_data = await fetch_transactions(exchange, mode, limit=200)
+            print("Fetching transaction history (per-symbol fills)...")
+            fill_symbols = collect_symbols_for_fills(positions_data, open_orders_data, trades_data)
+            transactions_data, tx_fetch_err = await fetch_transactions_for_symbols(
+                exchange, mode, fill_symbols, limit_per_symbol=100
+            )
+            if tx_fetch_err and tx_fetch_err != "no_symbols":
+                print(f"  WARNING: fetch_my_trades: {tx_fetch_err}")
             save("transactions.json", transactions_data)
+
+        reconciliation_md: str | None = None
+        if sync_all:
+            ledger_span_digest = "skipped"
+            ledger_err_digest: str | None = None
+            if balance_data and not args.no_ledger:
+                ledger_span_digest = (
+                    "full_90d_windows" if args.ledger_full_history else "last_90d_only"
+                )
+                ledger_err_digest = ledger_err
+            fill_err_digest = None
+            if tx_fetch_err and tx_fetch_err != "no_symbols":
+                fill_err_digest = tx_fetch_err
+            reconciliation_md, recon_machine = build_reconciliation_digest(
+                ledger_raw if not args.no_ledger else [],
+                funding_summary_for_recon,
+                funding_err_for_recon,
+                len(trades_data),
+                paginate_closed if (sync_all or args.trades) else False,
+                len(transactions_data),
+                fill_symbols,
+                fill_err_digest,
+                ledger_err_digest,
+                ledger_span_digest,
+            )
+            save("reconciliation.json", recon_machine)
 
         if sync_all:
             print("Generating snapshot...")
@@ -1122,6 +1376,7 @@ async def main(args: argparse.Namespace) -> None:
                 transactions_data,
                 accounting_md=accounting_md,
                 balance_timeline_md=balance_timeline_md,
+                reconciliation_md=reconciliation_md,
             )
             save("snapshot.md", snapshot)
 
@@ -1154,9 +1409,14 @@ if __name__ == "__main__":
         help="Ledger: walk all 90-day windows (slow); default is last 90 days only",
     )
     parser.add_argument(
+        "--closed-orders-fast",
+        action="store_true",
+        help="Full sync only: **skip** pagination on closed orders (first page only; may miss older stops)",
+    )
+    parser.add_argument(
         "--closed-orders-full",
         action="store_true",
-        help="Closed swap orders: paginate until all history is fetched (more API calls)",
+        help="With `--trades` only: paginate all closed swap orders. **Full sync** paginates by default.",
     )
     parser.add_argument(
         "--closed-orders-limit",

@@ -332,9 +332,23 @@ When a trade closes (stop, TP, manual, or liquidation):
 
 ## 6. Data reconciliation (every sync)
 
-After `python exchange/sync.py`, verify:
+After `python exchange/sync.py`, read **in this order**:
+
+1. **`snapshot.md` — `# Reconciliation & coverage`** (top of file) — **coverage** (pagination on/off, fill row count, ledger span) and **warnings**. If warnings say single-page closed orders or skipped ledger, treat downstream tables as **possibly incomplete**.
+2. **`reconciliation.json`** — machine-readable copy of the same flags + `recent_close_bills` (ledger `businessType` rows for **close_short / close_long / burst_*** / **force_***). Use when the **order** table does not show a stop clearly.
+3. **`positions.json`** vs last known journal state — size/side/entry drift?
+4. **`open_orders.json`** — resting limits and **trigger** closes not yet filled.
+5. **`trades.json` / `closed_orders_pnl.md`** — paginated by default on full sync; cross-check closes against journal.
+6. **`transactions.json`** — per-symbol **fills** (Bitget requires symbol-scoped fetch; merged in sync).
+7. **`funding.json` / `accounting.md`** — external deposits/withdrawals vs swap equity.
+8. **`balance_timeline.md`** — bill-level cashflow when you need full history (default last 90 days; `--ledger-full-history` for older).
+
+Then verify:
 
 - Any **new closed orders** in `trades.json` that are **not** in `journal/positions/`? → Flag as **unlogged trades** (potential Rule 1/3 violation).
 - Any **new open positions** in `positions.json` that were **not** discussed in this workspace? → Flag immediately.
 - Balance delta since last sync → log in `context.md` if material.
 - If `closed_orders_pnl.md` shows a close with **no** matching plan in `journal/positions/` → treat as unplanned trade evidence.
+- **Ledger close bills** (`reconciliation.json` → `recent_close_bills` or `balance_timeline`) vs user narrative (e.g. “stopped out”) — if they disagree, **exchange bills win**; fix journal.
+
+See `exchange/README.md` — **How to interpret (order of trust)**.
