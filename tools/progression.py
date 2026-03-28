@@ -5,11 +5,16 @@ Process-first scoring: compliance, analysis quality, and execution hygiene.
 PnL is context only (not a primary XP source).
 
 Usage:
-    python tools/progression.py
+    python most/tools/progression.py                  # normal run (idempotent per day)
+    python most/tools/progression.py --force           # skip same-day guard
+    python most/tools/progression.py --coach -10       # apply bounded coach adjustment
+    python most/tools/progression.py --dry-run         # preview without writing files
 """
 
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 import re
 from dataclasses import dataclass
@@ -262,15 +267,34 @@ def generate_report(
             "- PnL is informational context only; process quality drives XP.",
             "- Coach adjustment lane is bounded at +/-15 XP per run.",
             "",
-            "*Run: `python tools/progression.py` after sync or material session updates.*",
+            "*Run: `python most/tools/progression.py` after sync or material session updates.*",
         ]
     )
     return "\n".join(lines)
 
 
+def _context_hash(context_text: str) -> str:
+    return hashlib.sha256(context_text.encode("utf-8")).hexdigest()[:16]
+
+
+def _already_scored_today(history: list[dict], today_date: str, ctx_hash: str) -> bool:
+    for entry in reversed(history):
+        ts = entry.get("timestamp", "")
+        if ts[:10] == today_date and entry.get("context_hash") == ctx_hash:
+            return True
+    return False
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="MOST progression scoring")
+    parser.add_argument("--force", action="store_true", help="Skip same-day idempotency guard")
+    parser.add_argument("--coach", type=int, default=0, metavar="N", help="Coach adjustment XP (bounded -15..+15)")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing files")
+    cli = parser.parse_args()
+
     now = datetime.now(timezone.utc)
     ts = now.strftime("%Y-%m-%d %H:%M UTC")
+    today_date = now.strftime("%Y-%m-%d")
 
     balances = read_json(EXCHANGE_DIR / "balances.json", {})
     positions = read_json(EXCHANGE_DIR / "positions.json", [])
@@ -283,7 +307,16 @@ def main() -> None:
     if not isinstance(state, dict):
         state = {}
 
-    coach_adjustment = 0
+    ctx_hash = _context_hash(context_text)
+    history = state.get("history", [])
+    if not isinstance(history, list):
+        history = []
+
+    if not cli.force and _already_scored_today(history, today_date, ctx_hash):
+        print(f"Already scored today ({today_date}) with unchanged context. Use --force to override.")
+        return
+
+    coach_adjustment = clamp(cli.coach, -15, 15)
     events = score_session(
         positions=positions if isinstance(positions, list) else [],
         open_orders=open_orders if isinstance(open_orders, list) else [],
@@ -306,9 +339,6 @@ def main() -> None:
     blended_discipline = round(old_discipline * 0.7 + discipline_score * 0.3, 1)
     blended_analysis = round(old_analysis * 0.7 + analysis_score * 0.3, 1)
 
-    history = state.get("history", [])
-    if not isinstance(history, list):
-        history = []
     history.append(
         {
             "timestamp": now.isoformat(),
@@ -317,6 +347,7 @@ def main() -> None:
             "discipline_score": discipline_score,
             "analysis_score": analysis_score,
             "balance_total": balances.get("total") if isinstance(balances, dict) else None,
+            "context_hash": ctx_hash,
         }
     )
     history = history[-50:]
@@ -339,9 +370,6 @@ def main() -> None:
         "history": history,
     }
 
-    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    STATE_PATH.write_text(json.dumps(new_state, indent=2), encoding="utf-8")
-
     report = generate_report(
         ts=ts,
         events=events,
@@ -353,6 +381,15 @@ def main() -> None:
         discipline_score=blended_discipline,
         analysis_score=blended_analysis,
     )
+
+    if cli.dry_run:
+        print("--- DRY RUN (no files written) ---")
+        print(report)
+        print(f"\nWould set total_xp={total_xp}, level={level} ({title})")
+        return
+
+    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STATE_PATH.write_text(json.dumps(new_state, indent=2), encoding="utf-8")
     REPORT_PATH.write_text(report, encoding="utf-8")
     print(f"Progression state updated: {STATE_PATH}")
     print(f"Progression report saved: {REPORT_PATH}")

@@ -255,7 +255,8 @@ async def fetch_trades(
 
     try:
         orders = await exchange.fetch_closed_orders(None, None, limit, params)
-    except ccxt.BaseError:
+    except ccxt.BaseError as e:
+        print(f"  WARNING: fetch_closed_orders failed: {e}")
         return []
 
     result = []
@@ -355,7 +356,8 @@ async def fetch_transactions(exchange: ccxt.bitget, mode: str, limit: int = 200)
 
     try:
         trades = await exchange.fetch_my_trades(None, None, limit, params)
-    except ccxt.BaseError:
+    except ccxt.BaseError as e:
+        print(f"  WARNING: fetch_my_trades failed: {e}")
         return []
 
     result = []
@@ -1194,7 +1196,7 @@ if __name__ == "__main__":
         type=int,
         default=100,
         metavar="N",
-        help="Page size for closed orders (default 100; ignored when --closed-orders-full)",
+        help="Page size for closed orders (default 100; used as page size when --closed-orders-full)",
     )
     args = parser.parse_args()
     asyncio.run(main(args))
