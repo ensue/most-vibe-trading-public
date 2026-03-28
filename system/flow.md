@@ -170,7 +170,7 @@ Each type has a **mandatory output sequence**:
 
 Run this checklist **after generating the response**, before ending the turn:
 
-- [ ] Did I update the **chapter live trajectory** (`journal/chapters/chapter-N-live.md`) — signal log + trajectory status + predicted danger?
+- [ ] Did I update the **chapter live trajectory** (`journal/chapters/chapter-N-live.md`) — signal log + trajectory status + **predicted danger (current)** + **archive** superseded predictions (newest archive near top of archive section)?
 - [ ] Did I update relevant journal sphere entries?
 - [ ] Did I update `_summary.md` if data changed?
 - [ ] Did I update `context.md` if state changed (position, streak, concern, chapter)?
@@ -199,9 +199,14 @@ A chapter is an **operational boundary** — same journal, same archive, new men
 
 **Live trajectory** (`journal/chapters/chapter-N-live.md`):
 - Updated after every substantive session
-- Contains: trajectory status (ASCENDING / STABLE / DRIFTING / DESCENDING / CRISIS), signal log, predicted next-session danger
+- Contains: trajectory status (ASCENDING / STABLE / DRIFTING / DESCENDING / CRISIS), **predicted danger (current)**, **archived predictions**, signal log
 - Read on EVERY session (Step 2B) — this is the AI's awareness of where the story is going
 - When DRIFTING or worse: open with trajectory observation, not "how are you feeling?"
+
+**Prediction archive (required)** — same file, **do not delete** superseded text:
+- **`### Predicted danger (current)`** — soon after trajectory status. **Date** each revision (`**As of YYYY-MM-DD**` + short context if needed).
+- When predictions change: **move** the previous block into **`### Archived predictions (read-only)`** below, with a dated subheading (e.g. `#### YYYY-MM-DD — superseded (reason)`). **Newest archive entry at the top of the archive section**; older entries below.
+- Purpose: review forecast accuracy later; AI and user can see what was believed **before** events.
 
 **Postmortem** (`journal/chapters/chapter-N-postmortem.md`):
 - Written when chapter closes

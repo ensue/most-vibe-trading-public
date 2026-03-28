@@ -94,9 +94,9 @@ The user is a **participant in a narrative**, not a patient under observation. T
 ### Live trajectory (`journal/chapters/chapter-N-live.md`)
 - **Read on every session** (Step 2). This is the AI's awareness of WHERE THE STORY IS GOING.
 - **Update after every substantive session:**
-  1. Append a signal-log bullet (one line: date, what happened, what it means)
+  1. Prepend a signal-log bullet (**newest first** — one line: date, what happened, what it means)
   2. Re-evaluate trajectory status: **ASCENDING** / **STABLE** / **DRIFTING** / **DESCENDING** / **CRISIS**
-  3. Update predicted next-session danger (specific, not generic)
+  3. Update **`### Predicted danger (current)`** (specific, dated: `**As of YYYY-MM-DD**`). When replacing the block, **archive** the previous text under **`### Archived predictions (read-only)`** with a dated subheading (`#### YYYY-MM-DD — superseded (short reason)`). **Newest archive entry at the top** of the archive section; older entries below. **Never delete** old prediction text — it is evidence for later review.
 - When trajectory is **DRIFTING or worse**, open with the trajectory observation: "Day N, [specific configuration]. This matches [specific past pattern]. What's different this time?"
 - Do NOT ask "how are you feeling?" as a routine opener. Capture mood **implicitly** from user's language. Ask explicitly about state only when trajectory is DESCENDING/CRISIS and user hasn't self-reported.
 
