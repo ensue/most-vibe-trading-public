@@ -5,10 +5,10 @@ Process-first scoring: compliance, analysis quality, and execution hygiene.
 PnL is context only (not a primary XP source).
 
 Usage:
-    python most/tools/progression.py                  # normal run (idempotent per day)
-    python most/tools/progression.py --force           # skip same-day guard
-    python most/tools/progression.py --coach -10       # apply bounded coach adjustment
-    python most/tools/progression.py --dry-run         # preview without writing files
+    python tools/progression.py                  # normal run (idempotent per day)
+    python tools/progression.py --force           # skip same-day guard
+    python tools/progression.py --coach -10       # apply bounded coach adjustment
+    python tools/progression.py --dry-run         # preview without writing files
 """
 
 from __future__ import annotations
@@ -267,7 +267,7 @@ def generate_report(
             "- PnL is informational context only; process quality drives XP.",
             "- Coach adjustment lane is bounded at +/-15 XP per run.",
             "",
-            "*Run: `python most/tools/progression.py` after sync or material session updates.*",
+            "*Run: `python tools/progression.py` after sync or material session updates.*",
         ]
     )
     return "\n".join(lines)

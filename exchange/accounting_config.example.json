@@ -1,5 +1,5 @@
 {
-  "_comment": "Copy to accounting_config.json (gitignored) or set MOST_R_UNIT_USD / MOST_MENTAL_BANKROLL_USD in vault",
+  "_comment": "Copy to accounting_config.json (gitignored) and set values to match your rules.md risk calibration. Optional: MOST_R_UNIT_USD / MOST_MENTAL_BANKROLL_USD in vault/bitget-api.env override these. Full priority list: ../system/SOURCE_OF_TRUTH.md",
   "mental_bankroll_usd": null,
   "r_unit_usd": null
 }

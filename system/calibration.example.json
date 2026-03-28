@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy to calibration.json (gitignored). Optional extras on top of exchange/accounting_config. No personal numbers in the committed example — use null. Authoritative risk text: rules.md Rule 2.",
+  "currency": "USD",
+  "intervention_recovery_weeks_per_trade_estimate": null
+}

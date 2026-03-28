@@ -1,6 +1,7 @@
 vault/
 exchange/data/
 exchange/accounting_config.json
+system/calibration.json
 __pycache__/
 *.pyc
 .env

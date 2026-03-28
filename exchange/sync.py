@@ -50,6 +50,11 @@ from aiohttp import ClientSession, TCPConnector
 from aiohttp.resolver import ThreadedResolver
 from dotenv import dotenv_values
 
+_MOST_ROOT = Path(__file__).resolve().parent.parent
+if str(_MOST_ROOT) not in sys.path:
+    sys.path.insert(0, str(_MOST_ROOT))
+from system.calibration import load_accounting_config  # noqa: E402
+
 VAULT_CANDIDATES = [
     Path(__file__).resolve().parent.parent / "vault" / "bitget-api.env",
     Path(__file__).resolve().parent.parent.parent / "vault" / "bitget-api.env",
@@ -59,44 +64,6 @@ VAULT_CANDIDATES = [
 DATA_DIR = Path(__file__).resolve().parent / "data"
 EXCHANGE_DIR = Path(__file__).resolve().parent
 BALANCE_HISTORY_FILE = "balance_history.jsonl"
-
-
-def load_accounting_config() -> dict[str, float | None]:
-    """
-    Optional risk calibration for R labels in accounting output (not exchange balances).
-    Priority: vault env vars > accounting_config.json > example file (nulls).
-    """
-    example_path = EXCHANGE_DIR / "accounting_config.example.json"
-    path = EXCHANGE_DIR / "accounting_config.json"
-    raw: dict = {}
-    if example_path.exists():
-        raw = json.loads(example_path.read_text(encoding="utf-8"))
-    if path.exists():
-        raw = {**raw, **json.loads(path.read_text(encoding="utf-8"))}
-    for k in list(raw.keys()):
-        if k.startswith("_"):
-            del raw[k]
-
-    def _f(key: str) -> float | None:
-        v = raw.get(key)
-        if v is None or v == "":
-            return None
-        return float(v)
-
-    mental = _f("mental_bankroll_usd")
-    r_unit = _f("r_unit_usd")
-
-    for vault in VAULT_CANDIDATES:
-        if not vault.exists():
-            continue
-        env = dotenv_values(vault)
-        if (env.get("MOST_R_UNIT_USD") or "").strip():
-            r_unit = float(env["MOST_R_UNIT_USD"].strip())
-        if (env.get("MOST_MENTAL_BANKROLL_USD") or "").strip():
-            mental = float(env["MOST_MENTAL_BANKROLL_USD"].strip())
-        break
-
-    return {"mental_bankroll_usd": mental, "r_unit_usd": r_unit}
 
 
 def _parse_float_field(v) -> float | None:

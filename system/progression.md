@@ -100,22 +100,22 @@ Each completed mission: +25 XP.
 ## Data Sources
 
 Primary:
-- `most/exchange/data/balances.json`
-- `most/exchange/data/positions.json`
-- `most/exchange/data/open_orders.json`
-- `most/exchange/data/trades.json`
+- `exchange/data/balances.json`
+- `exchange/data/positions.json`
+- `exchange/data/open_orders.json`
+- `exchange/data/trades.json`
 
 Secondary:
-- `most/context.md`
-- `most/journal/positions/_summary.md`
+- `context.md`
+- `journal/positions/_summary.md`
 
 Outputs:
-- `most/system/progression_state.json`
-- `most/tools/progression_report.md`
+- `system/progression_state.json`
+- `tools/progression_report.md`
 
 ## Operating Notes
 
 - This is a quality tracking system, not trade permission.
 - XP should reflect repeatable behavior, not luck.
 - If scoring feels noisy, tighten evidence thresholds before changing weights.
-- **AI accountability:** The Cursor partner must **update** `progression_state.json` on substantive sessions — **not** leave totals frozen while `journal/` records incidents. Run `most/tools/progression.py` for baseline scoring, then **append manual penalty/bonus lines** when `progression.md` hard penalties apply and the script cannot infer them.
+- **AI accountability:** The Cursor partner must **update** `progression_state.json` on substantive sessions — **not** leave totals frozen while `journal/` records incidents. Run `tools/progression.py` for baseline scoring, then **append manual penalty/bonus lines** when `progression.md` hard penalties apply and the script cannot infer them.

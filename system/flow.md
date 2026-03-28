@@ -2,6 +2,8 @@
 
 Deterministic pipeline for every interaction. No improvisation on sequence.
 
+**Money and risk amounts:** Do not hardcode dollars in forks or the public template. Read **`rules.md`** (Rule 2) and merged calibration — see **`system/SOURCE_OF_TRUTH.md`**. Use **`from system.calibration import load_calibration`** (run with the repo root on `PYTHONPATH`) for machine-readable `r_unit_usd` / `mental_bankroll_usd` when present.
+
 ---
 
 ## 1. Input classification
@@ -30,9 +32,9 @@ Multiple types can co-occur (e.g. **POST_TRADE** + **STATE** + **RULE_BREAK**).
 
 | Condition | Action |
 |-----------|--------|
-| New conversation (first message in thread) | `python most/exchange/sync.py` + `python most/tools/monte_carlo.py` |
-| POST_ENTRY, POST_TRADE, or user reports exchange action | `python most/exchange/sync.py` |
-| Balance/position needed for sizing or verification | `python most/exchange/sync.py` |
+| New conversation (first message in thread) | `python exchange/sync.py` + `python tools/monte_carlo.py` |
+| POST_ENTRY, POST_TRADE, or user reports exchange action | `python exchange/sync.py` |
+| Balance/position needed for sizing or verification | `python exchange/sync.py` |
 | Otherwise | Skip sync |
 
 ### B. Read state (always, in parallel batch)
@@ -41,19 +43,19 @@ Minimum reads for **every** response that touches trading:
 
 | File | Why |
 |------|-----|
-| `most/context.md` | Current chapter, status, concerns, recent activity |
-| `most/exchange/data/snapshot.md` | Latest exchange truth (if just synced) |
-| `most/rules.md` | Iron rules — verify compliance |
-| `most/journal/positions/_summary.md` | Active positions, stats, streak |
+| `context.md` | Current chapter, status, concerns, recent activity |
+| `exchange/data/snapshot.md` | Latest exchange truth (if just synced) |
+| `rules.md` | Iron rules — verify compliance |
+| `journal/positions/_summary.md` | Active positions, stats, streak |
 
 **Conditional** deeper reads (add when input type requires):
 
 | Trigger | Read |
 |---------|------|
-| STATE, RULE_BREAK, or behavioral warning signal | `most/profile.md`, `most/journal/mood/_summary.md` |
-| Pattern detection or repeat-incident suspicion | `most/journal/patterns/_summary.md` |
-| XP / level / discipline question or session wrap-up | `most/system/progression_state.json` |
-| Specific past trade reference | The individual `most/journal/positions/YYYY-MM-DD-*.md` |
+| STATE, RULE_BREAK, or behavioral warning signal | `profile.md`, `journal/mood/_summary.md` |
+| Pattern detection or repeat-incident suspicion | `journal/patterns/_summary.md` |
+| XP / level / discipline question or session wrap-up | `system/progression_state.json` |
+| Specific past trade reference | The individual `journal/positions/YYYY-MM-DD-*.md` |
 
 ### C. Classify risk state
 
@@ -85,7 +87,7 @@ Each type has a **mandatory output sequence**:
 #### ENTRY_REQUEST
 1. Check risk state. If RED → intervention.
 2. Verify Rule 1 (pre-trade pause: they are here).
-3. Verify Rule 2 (risk ≤ $40 / configured amount).
+3. Verify Rule 2 (risk ≤ configured **R unit** / amount from `rules.md` + `load_calibration()`).
 4. Verify Rule 3 (plan stated: entry, SL, TP, size, thesis).
 5. Verify Rule 5 (cooldown respected if prior loss).
 6. If all pass → Sizing block + "Lock this plan? If yes, open on exchange and sync for verification."
@@ -173,7 +175,7 @@ A chapter is an **operational boundary** — same journal, same archive, new men
 
 #### 4a. Name the pattern (1 line)
 Use the exact pattern name from `profile.md`. No hedging.
-> "This is **serial entry** — same pattern as the March 27 cascade."
+> Example shape: "This is **serial entry** — same pattern as **\<your logged incident\>**." (Point to a real `journal/positions/*.md` or `patterns/_summary.md` line, not a generic date.)
 
 #### 4b. Concrete damage report (the math that hurts)
 
@@ -184,19 +186,19 @@ Pull **real numbers** from the workspace — not hypotheticals:
 - **Balance trajectory** — "You started this chapter at $X. You are now at $Y. That is Z trades of progress erased."
 - **Projection cost** — "At your edge, recovering this $X loss requires N additional **perfect** trades. Breaking rules now adds M more."
 
-Use `most/tools/projection.py` logic: if 1 compliant trade nets ~$X avg, state how many trades of **disciplined work** the current damage costs.
+Use `tools/projection.py` logic: express recovery in **R multiples** and **trade count** using **`r_unit_usd`** from `load_calibration()` (or the locked plan risk) — never invent round dollars.
 
-> "You lost $86 in the last 3 hours. That is **2.15R** — which takes **4-5 disciplined winning trades** to recover. If you enter now and lose another $40, recovery becomes **7-8 trades**. That is 2-3 weeks of work for 3 hours of impulse."
+> Example shape (fill with **sync + journal** numbers only): "You lost **[$SESSION_LOSS]** in the last **[$WINDOW]**. That is **[N]R** — which takes **~[M] disciplined winning trades** to recover at **[R_UNIT]** per R. If you enter now and lose another **[R_UNIT]**, recovery becomes **~[M2] trades**."
 
 #### 4c. Pattern trajectory (where this road goes)
 
 Reference the **user's own history**, not a generic warning:
 
-- Link to the **specific incident** that matches (e.g. `journal/positions/2026-03-27-mobile-cascade-liquidation.md`)
-- State the **sequence** that happened last time: "Last time: stop → re-entry → cross-fund → max size → liquidation → $0"
-- State where the user **currently is** in that sequence: "You are at step 2 right now."
+- Link to the **specific incident** that matches (path under `journal/positions/` — use the user’s real filename).
+- State the **sequence** that happened last time (symbols and times from **their** journal, not a template).
+- State where the user **currently is** in that sequence: "You are at step [K] right now."
 
-> "March 27: stop on INJ → immediate re-entry → closed SOL to fund margin → max-size mobile YOLO → liquidation. You went from $128 to $0 in under 2 hours. Right now you are asking to re-enter after a stop. That is step 2 of the same sequence."
+> Example shape (no invented symbols/$): "Last time: **[sequence from their log]** → liquidation. Balance went from **[$A]** to **[$B]** in **[duration]**. Right now you are at step **[K]** of the same family of moves."
 
 #### 4d. The one question
 
@@ -215,8 +217,8 @@ Do **not** lecture. End with a single concrete question that forces a decision:
 
 - **Polish** if the user is writing in Polish (emotional processing language).
 - **Short sentences.** No paragraphs. No motivational platitudes.
-- **Numbers > words.** "$86 lost" hits harder than "significant losses."
-- **Their own history > generic advice.** "You did this on March 27 and lost everything" > "serial entry is dangerous."
+- **Numbers > words.** A concrete **[$SESSION_LOSS]** from `exchange/data/` hits harder than "significant losses."
+- **Their own history > generic advice.** Cite **their** incident file and balances, not illustrative dates from this doc.
 - **Future cost > past blame.** "Recovery = 5 trades" > "you broke Rule 5."
 
 ---
@@ -229,7 +231,7 @@ When a trade closes (stop, TP, manual, or liquidation):
 2. **Match** to locked plan in `journal/positions/`
 3. **Compute:**
    - Realized PnL (from exchange)
-   - R-multiple = realized PnL / planned risk ($40 or whatever was locked)
+   - R-multiple = realized PnL / planned risk (dollar risk locked in the plan, typically **r_unit** from calibration / Rule 2)
    - Compliance: was entry/SL/TP/size per plan? Were rules followed?
 4. **Update `journal/positions/YYYY-MM-DD-*.md`** with outcome section:
    - Entry → Exit (price, time)
@@ -249,7 +251,7 @@ When a trade closes (stop, TP, manual, or liquidation):
 
 ## 6. Data reconciliation (every sync)
 
-After `python most/exchange/sync.py`, verify:
+After `python exchange/sync.py`, verify:
 
 - Any **new closed orders** in `trades.json` that are **not** in `journal/positions/`? → Flag as **unlogged trades** (potential Rule 1/3 violation).
 - Any **new open positions** in `positions.json` that were **not** discussed in this workspace? → Flag immediately.

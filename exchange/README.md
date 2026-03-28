@@ -45,6 +45,8 @@ After that, **output shape stays the same**: JSON + `snapshot.md` under `exchang
 
 Copy `exchange/accounting_config.example.json` → **`exchange/accounting_config.json`** (gitignored) and set **`mental_bankroll_usd`** and **`r_unit_usd`** to match your `rules.md`. Alternatively set **`MOST_MENTAL_BANKROLL_USD`** and **`MOST_R_UNIT_USD`** in `vault/bitget-api.env` (overrides JSON). If unset, USD columns still populate; **signed R** is omitted.
 
+**Single merge for AI + tools:** `system/calibration.py` (`load_calibration()`, `load_accounting_config()`) reads the same files plus optional **`system/calibration.json`** — see **`system/SOURCE_OF_TRUTH.md`**. Sync imports `load_accounting_config` from there (no duplicated logic).
+
 Full sync runs funding + accounting by default; use `--no-funding` to skip deposit/withdrawal API calls.
 
 **Closed orders:** Default is **one page** (`--closed-orders-limit`, default 100). Use **`--closed-orders-full`** to paginate through **all** closed swap orders (slower). Realized PnL is whatever Bitget attaches to each order row; opens often show `0` or `—`.
