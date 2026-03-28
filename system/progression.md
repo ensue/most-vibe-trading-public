@@ -118,3 +118,4 @@ Outputs:
 - This is a quality tracking system, not trade permission.
 - XP should reflect repeatable behavior, not luck.
 - If scoring feels noisy, tighten evidence thresholds before changing weights.
+- **AI accountability:** The Cursor partner must **update** `progression_state.json` on substantive sessions — **not** leave totals frozen while `journal/` records incidents. Run `tools/progression.py` for baseline scoring, then **append manual penalty/bonus lines** when hard penalties apply and the script cannot infer them.

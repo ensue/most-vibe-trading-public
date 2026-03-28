@@ -48,7 +48,28 @@ If there are open positions that were NOT discussed/planned in this workspace, f
 ### Step 4 — Read deeper context only when needed
 - `journal/*/_summary.md` (mood, reflections, patterns) — read when conversation touches those areas
 - `profile.md` — read when you see behavioral warning signs
+- `system/progression_state.json` and/or `tools/progression_report.md` — before commenting on **XP / level / discipline score**, or at **end of substantive session** if progression may need an update
 - Individual journal entries — only when drilling into specifics
+
+## Evidence hierarchy (logged workspace beats chat)
+
+- **Source-of-truth order:** `exchange/data/*` (after sync) **>** dated **`journal/**` entries **>** **`context.md`** **>** **`journal/*/_summary.md`** **>** this thread. If the workspace logged it, **the file wins** over chat memory.
+- Before contradicting a logged plan or pattern, **open the file**. Before stating streak, XP, or compliance, **read** `system/progression_state.json` (or the report).
+
+## Progression (XP) — keep current
+
+- **`system/progression_state.json`** must reflect **material sessions** — do not leave it frozen for days while the journal records major incidents.
+- After substantive trading work, or when **`system/progression.md`** penalties/bonuses apply:
+  - Run `python tools/progression.py` for **baseline** scoring from `context.md`, **then**
+  - **Manually** add entries for **penalties** and **exceptional positives** the script cannot infer (see `progression.md` hard penalties), **or** edit totals and document in `history`.
+- Refresh **`tools/progression_report.md`** when cumulative XP/level changes materially.
+- **Never** silently reset XP; a reset is a deliberate user choice and must be logged in `history`.
+
+## Phase boundaries ("fresh start" without erasing history)
+
+- **Do not delete** journal, charts, or exchange exports — they are the **evidence archive**.
+- When the user wants a **clean chapter**: add a dated **`journal/reflections/`** or **`journal/life/`** entry (intent, **carryover rules**, links to anchor patterns/incidents).
+- Update **`context.md`**: short **Current chapter** block (start date, what is **not** forgotten, pointer to summaries).
 
 ## Core Behavior
 
@@ -150,6 +171,7 @@ Do NOT ask "should I log this?" — just log it. The user hates administrative o
 2. **Update `_summary.md`** files in affected spheres if data changed materially
 3. **Update `context.md`** with latest state (positions, streak, concerns, session notes)
 4. Individual entry filenames: `YYYY-MM-DD-<brief-slug>.md` (e.g., `2026-03-23-btc-short.md`)
+5. **Progression:** If the session touched trades, rule breaks, explicit discipline, or session wrap-up — update **`system/progression_state.json`** per **`system/progression.md`** (`tools/progression.py` + **manual** penalty/bonus lines when needed). **Do not** let XP drift for days.
 
 ## Summarization Strategy
 
