@@ -17,6 +17,8 @@ Usage:
     python exchange/sync.py --trades     # closed orders only
     python exchange/sync.py --tx         # fill-level transaction history only
     python exchange/sync.py --no-funding # full sync but skip deposit/withdrawal API (faster)
+    python exchange/sync.py --no-ledger  # full sync but skip swap ledger / balance timeline (faster)
+    python exchange/sync.py --ledger-full-history  # ledger: all 90-day windows (slow; default = last 90d)
 
 Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in this file).
 
@@ -26,6 +28,13 @@ Accounting:
     plus `data/accounting.md`. **R labels** are optional: set `exchange/accounting_config.json`
     (copy from `accounting_config.example.json`) or `MOST_R_UNIT_USD` / `MOST_MENTAL_BANKROLL_USD`
     in vault — no hardcoded dollar amounts in this script.
+
+Balance timeline (swap USDT):
+    Full sync fetches **futures account bills** (`fetch_ledger`, USDT-M), walks 90-day windows,
+    reconciles **backward** from current swap balance so each row has **balance_after_usdt** for
+    that bill (trade PnL, fees, funding, transfers). Writes `data/balance_timeline.jsonl` and
+    `data/balance_timeline.md`. Not identical to “one row per order” if one order has multiple
+    fills/bills — use `order_id` / `bill_id` from raw `info` when the API provides them.
 """
 
 import argparse
@@ -372,6 +381,321 @@ async def fetch_usdt_deposits_and_withdrawals(exchange: ccxt.bitget) -> tuple[li
     return deposits, withdrawals, err
 
 
+def _bill_to_ledger_entry_v2(b: dict) -> dict:
+    """Bitget v2 `data.bills[]` row (mix account bill)."""
+    ts = int(b.get("cTime") or 0)
+    dt = None
+    if ts:
+        dt = datetime.fromtimestamp(ts / 1000.0, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    bal_raw = b.get("balance")
+    after = float(bal_raw) if bal_raw not in (None, "") else None
+    return {
+        "id": str(b.get("billId") or ""),
+        "timestamp": ts,
+        "datetime": dt,
+        "type": b.get("businessType"),
+        "direction": None,
+        "amount": None,
+        "after": after,
+        "fee": {"cost": float(b.get("fee") or 0)},
+        "info": b,
+    }
+
+
+# v2 `/api/v2/mix/account/bill` requires a valid `businessType` filter (bare request → 40020).
+# Query each category and merge (dedupe by billId). Extend if you need niche types.
+_V2_BUSINESS_TYPES: tuple[str, ...] = (
+    "open_long",
+    "close_long",
+    "open_short",
+    "close_short",
+    "force_close_long",
+    "force_close_short",
+    "burst_long_loss_query",
+    "burst_short_loss_query",
+    "trans_to_exchange",
+    "trans_from_exchange",
+    "trans_to_cross",
+    "trans_from_cross",
+    "transfer_in",
+    "transfer_out",
+    "contract_settle_fee",
+    "buy",
+    "sell",
+    "append_margin",
+    "reduce_margin",
+    "auto_append_margin",
+)
+
+
+async def _fetch_ledger_pages_in_window(
+    exchange: ccxt.bitget,
+    start_ms: int,
+    end_ms: int,
+) -> list:
+    """
+    Bitget v2 `GET /api/v2/mix/account/bill` — one query per `businessType`, paginate `idLessThan`.
+    """
+    window_rows: list = []
+    seen_local: set[str] = set()
+    for biz in _V2_BUSINESS_TYPES:
+        cursor: str | None = None
+        while True:
+            request: dict = {
+                "coin": "USDT",
+                "productType": "USDT-FUTURES",
+                "startTime": start_ms,
+                "endTime": end_ms,
+                "limit": 100,
+                "businessType": biz,
+            }
+            if cursor:
+                request["idLessThan"] = cursor
+            try:
+                response = await exchange.privateMixGetV2MixAccountBill(request)
+            except ccxt.BaseError:
+                break
+            code = response.get("code")
+            if code and str(code) != "00000":
+                break
+            bills = (response.get("data") or {}).get("bills") or []
+            if not bills:
+                break
+            for b in bills:
+                bid = str(b.get("billId") or "")
+                if bid and bid in seen_local:
+                    continue
+                if bid:
+                    seen_local.add(bid)
+                window_rows.append(_bill_to_ledger_entry_v2(b))
+            if len(bills) < 100:
+                break
+            cursor = str(bills[-1].get("billId") or "")
+            if not cursor:
+                break
+    return window_rows
+
+
+async def fetch_swap_usdt_ledger_windowed(
+    exchange: ccxt.bitget,
+    full_history: bool = False,
+) -> tuple[list, str | None]:
+    """
+    USDT-M futures account bills. Default: **last 90 days** only (fast).
+    With `full_history`, walk backward in 90-day windows (same cap as funding).
+    """
+    merged: list = []
+    seen: set[str] = set()
+    end_ms = exchange.milliseconds()
+    last_err: str | None = None
+    max_windows = _MAX_FUNDING_WINDOWS if full_history else 1
+    for _ in range(max_windows):
+        start_ms = max(1, end_ms - _NINETY_DAYS_MS)
+        try:
+            chunk = await _fetch_ledger_pages_in_window(exchange, start_ms, end_ms)
+        except ccxt.BaseError as e:
+            last_err = str(e)
+            break
+        for t in chunk:
+            tid = str(t.get("id") or "")
+            if tid and tid in seen:
+                continue
+            if tid:
+                seen.add(tid)
+            merged.append(t)
+        if not full_history:
+            break
+        if start_ms <= 1:
+            break
+        end_ms = start_ms - 1
+    merged.sort(key=lambda x: x.get("timestamp") or 0)
+    return merged, last_err
+
+
+def ledger_net_usdt_delta(entry: dict) -> float:
+    """Signed USDT change from one v2 bill (`amount` in raw info; fee separate)."""
+    info = entry.get("info") or {}
+    raw = info.get("amount")
+    if raw is None:
+        raw = info.get("size")
+    if raw is not None:
+        return float(raw)
+    amt = float(entry.get("amount") or 0)
+    fee_d = entry.get("fee") or {}
+    fee = float(fee_d.get("cost") if isinstance(fee_d, dict) else fee_d or 0)
+    if entry.get("direction") == "in":
+        return amt - fee
+    return -(amt + fee)
+
+
+def extract_bill_meta(entry: dict) -> dict:
+    info = entry.get("info") or {}
+    sym = (
+        info.get("symbol")
+        or info.get("symbolName")
+        or ""
+    )
+    biz = info.get("businessType") or ""
+    oid = (
+        info.get("orderId")
+        or info.get("order_id")
+        or info.get("tradeId")
+        or info.get("trade_id")
+        or ""
+    )
+    return {"symbol": sym, "business_type": biz, "order_ref": str(oid) if oid else ""}
+
+
+def serialize_ledger_entry(entry: dict) -> dict:
+    fee = entry.get("fee")
+    fee_cost = float(fee.get("cost") if isinstance(fee, dict) else fee or 0)
+    return {
+        "id": entry.get("id"),
+        "timestamp": entry.get("timestamp"),
+        "datetime": entry.get("datetime"),
+        "type": entry.get("type"),
+        "direction": entry.get("direction"),
+        "amount": entry.get("amount"),
+        "after": entry.get("after"),
+        "fee": fee_cost,
+        "info": entry.get("info"),
+    }
+
+
+def build_balance_timeline_rows(
+    ledger_entries: list,
+    current_swap_usdt_total: float,
+) -> tuple[list[dict], dict]:
+    """
+    Prefer Bitget `balance` on each bill when present; else reconcile backward from current
+    swap total. Rows are chronological (oldest first).
+    """
+    ct = float(current_swap_usdt_total)
+    if not ledger_entries:
+        return [], {
+            "rows": 0,
+            "sum_delta": 0.0,
+            "implied_balance_before_oldest": ct,
+            "current_swap_usdt_total": ct,
+            "balance_source": "none",
+        }
+
+    sorted_e = sorted(ledger_entries, key=lambda x: x.get("timestamp") or 0)
+    use_api_balance = all(e.get("after") is not None for e in sorted_e)
+
+    rows: list[dict] = []
+    if use_api_balance:
+        for e in sorted_e:
+            delta = ledger_net_usdt_delta(e)
+            meta = extract_bill_meta(e)
+            rows.append({
+                "bill_id": str(e.get("id") or ""),
+                "timestamp": e.get("timestamp"),
+                "datetime": e.get("datetime"),
+                "type": e.get("type"),
+                "delta_usdt": round(delta, 8),
+                "balance_after_usdt": round(float(e["after"]), 8),
+                "symbol": meta["symbol"],
+                "business_type": meta["business_type"],
+                "order_ref": meta["order_ref"],
+            })
+        sum_delta = sum(float(r["delta_usdt"]) for r in rows)
+        return rows, {
+            "rows": len(rows),
+            "sum_delta": round(sum_delta, 8),
+            "implied_balance_before_oldest": None,
+            "current_swap_usdt_total": round(ct, 8),
+            "balance_source": "api_bill_balance",
+        }
+
+    running_after = ct
+    for i in range(len(sorted_e) - 1, -1, -1):
+        e = sorted_e[i]
+        delta = ledger_net_usdt_delta(e)
+        meta = extract_bill_meta(e)
+        rows.append({
+            "bill_id": str(e.get("id") or ""),
+            "timestamp": e.get("timestamp"),
+            "datetime": e.get("datetime"),
+            "type": e.get("type"),
+            "delta_usdt": round(delta, 8),
+            "balance_after_usdt": round(running_after, 8),
+            "symbol": meta["symbol"],
+            "business_type": meta["business_type"],
+            "order_ref": meta["order_ref"],
+        })
+        running_after = running_after - delta
+    rows.reverse()
+    sum_delta = sum(float(r["delta_usdt"]) for r in rows)
+    return rows, {
+        "rows": len(rows),
+        "sum_delta": round(sum_delta, 8),
+        "implied_balance_before_oldest": round(running_after, 8),
+        "current_swap_usdt_total": round(ct, 8),
+        "balance_source": "reconciled_backward",
+    }
+
+
+def build_balance_timeline_md(rows: list[dict], stats: dict, ledger_err: str | None) -> str:
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [
+        "# Balance timeline (USDT swap wallet)",
+        "",
+        f"Generated: {ts}",
+        "",
+        "Source: Bitget **mix account `/v2/mix/account/bill`** (USDT-M). Each row is one **account bill** "
+        "(not always 1:1 with a single parent order — see `order_ref`). "
+        "`balance_after_usdt` uses **exchange `balance`** on the bill when present; otherwise it is "
+        "**reconciled backward** from current swap `fetch_balance`.",
+        "",
+    ]
+    if ledger_err:
+        lines.extend(["**Ledger / bill API error:** " + ledger_err, ""])
+    imb = stats.get("implied_balance_before_oldest")
+    imb_line = f"${imb:,.2f}" if imb is not None else "— (API balance on each bill)"
+    lines.extend([
+        "## Reconciliation",
+        "",
+        f"- **Rows (bills):** {stats.get('rows', 0)}",
+        f"- **Balance column source:** `{stats.get('balance_source', '—')}`",
+        f"- **Sum of `delta_usdt`:** {stats.get('sum_delta', 0)}",
+        f"- **Implied balance before oldest bill** (reconciled mode only): {imb_line}",
+        f"- **Current swap total (this sync):** ${stats.get('current_swap_usdt_total', 0):,.2f}",
+        "",
+        "_Reconciled mode: if “before oldest” looks wrong, the bill chain may be incomplete in the "
+        "fetched time windows._",
+        "",
+        "## Rows (chronological, oldest → newest)",
+        "",
+    ])
+    show = rows[-500:] if len(rows) > 500 else rows
+    if len(rows) > 500:
+        lines.append(f"_Showing last **500** of **{len(rows)}** rows. Full list: `balance_timeline.jsonl`._")
+        lines.append("")
+    lines.extend([
+        "| Time | Bill ID | Δ USDT | Balance after | Type | Symbol | businessType | Order ref |",
+        "|------|---------|--------|---------------|------|--------|--------------|-----------|",
+    ])
+    for r in show:
+        dt = (r.get("datetime") or "")[:19]
+        lines.append(
+            f"| {dt} | {r.get('bill_id', '')[:12]}… | {r['delta_usdt']:.4f} | {r['balance_after_usdt']:.2f} "
+            f"| {r.get('type', '')} | {r.get('symbol', '') or '—'} | {r.get('business_type', '') or '—'} | {r.get('order_ref', '') or '—'} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def save_balance_timeline_jsonl(rows: list[dict]) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    path = DATA_DIR / "balance_timeline.jsonl"
+    path.write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + ("\n" if rows else ""),
+        encoding="utf-8",
+    )
+    print(f"  saved {path.relative_to(Path(__file__).resolve().parent.parent)}")
+
+
 def build_funding_summary(
     deposits: list,
     withdrawals: list,
@@ -511,6 +835,7 @@ def generate_snapshot(
     trades: list,
     transactions: list,
     accounting_md: str | None = None,
+    balance_timeline_md: str | None = None,
 ) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
@@ -614,6 +939,9 @@ def generate_snapshot(
     if accounting_md:
         lines.extend(["", "---", "", accounting_md.strip(), ""])
 
+    if balance_timeline_md:
+        lines.extend(["", "---", "", balance_timeline_md.strip(), ""])
+
     return "\n".join(lines)
 
 
@@ -648,6 +976,7 @@ async def main(args: argparse.Namespace) -> None:
         trades_data = []
         transactions_data = []
         accounting_md: str | None = None
+        balance_timeline_md: str | None = None
         acc_cfg = load_accounting_config()
 
         if sync_all or args.balance:
@@ -684,6 +1013,29 @@ async def main(args: argparse.Namespace) -> None:
             )
             save("accounting.md", accounting_md)
 
+        if sync_all and balance_data and not args.no_ledger:
+            print("Fetching swap USDT ledger (balance timeline)...")
+            ledger_raw, ledger_err = await fetch_swap_usdt_ledger_windowed(
+                exchange, full_history=args.ledger_full_history
+            )
+            save("ledger.json", [serialize_ledger_entry(x) for x in ledger_raw])
+            t_rows, t_stats = build_balance_timeline_rows(
+                ledger_raw, float(balance_data["total"])
+            )
+            save_balance_timeline_jsonl(t_rows)
+            save(
+                "balance_timeline_meta.json",
+                {
+                    "stats": t_stats,
+                    "ledger_error": ledger_err,
+                    "ledger_span": (
+                        "full_90d_windows" if args.ledger_full_history else "last_90d_only"
+                    ),
+                },
+            )
+            balance_timeline_md = build_balance_timeline_md(t_rows, t_stats, ledger_err)
+            save("balance_timeline.md", balance_timeline_md)
+
         if sync_all or args.positions:
             print("Fetching positions...")
             positions_data = await fetch_positions(exchange, mode)
@@ -713,6 +1065,7 @@ async def main(args: argparse.Namespace) -> None:
                 trades_data,
                 transactions_data,
                 accounting_md=accounting_md,
+                balance_timeline_md=balance_timeline_md,
             )
             save("snapshot.md", snapshot)
 
@@ -733,6 +1086,16 @@ if __name__ == "__main__":
         "--no-funding",
         action="store_true",
         help="Skip USDT deposit/withdrawal fetch and accounting files (faster)",
+    )
+    parser.add_argument(
+        "--no-ledger",
+        action="store_true",
+        help="Skip futures ledger fetch and balance timeline files (faster)",
+    )
+    parser.add_argument(
+        "--ledger-full-history",
+        action="store_true",
+        help="Ledger: walk all 90-day windows (slow); default is last 90 days only",
     )
     args = parser.parse_args()
     asyncio.run(main(args))

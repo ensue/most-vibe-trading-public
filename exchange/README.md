@@ -33,6 +33,12 @@ After that, **output shape stays the same**: JSON + `snapshot.md` under `exchang
 | **`funding.json`** | All-time USDT **deposits** and **withdrawals** (ccxt paginate) + summary |
 | **`accounting.md`** | **Net external** vs **current swap equity**; **signed R** only if you configure a rule unit (see below) |
 | **`balance_history.jsonl`** | Append-only **one line per sync** (timestamp + total/free/used) |
+| **`ledger.json`** | Raw-normalized **mix account bills** (USDT-M) |
+| **`balance_timeline.jsonl`** | **One line per bill** (chronological): `delta_usdt`, **`balance_after_usdt`**, `order_ref`, etc. |
+| **`balance_timeline.md`** | Human-readable sample (last 500 rows) + reconciliation stats |
+| **`balance_timeline_meta.json`** | Stats, `ledger_span` (`last_90d_only` default), API error if any |
+
+**Ledger scope:** By default the timeline uses **the last 90 days** of bills (fast). Use `--ledger-full-history` to walk all 90-day windows (same depth as funding fetch; much slower). Bitget v2 requires a `businessType` filter — the script queries a fixed list of types and merges results (extend `_V2_BUSINESS_TYPES` in `sync.py` if you miss rows).
 
 ### Accounting calibration (no amounts in `sync.py`)
 
