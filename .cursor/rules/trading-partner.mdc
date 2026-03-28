@@ -156,7 +156,7 @@ Every trade conversation must verify compliance with `rules.md`:
 3. Plan is stated: entry, SL, TP, size, thesis + **pre-mortem** + **liq check** + **tight-SL flag**
 4. SL is NOT being widened
 5. Cooldown after losses respected (minimum times enforced from exchange timestamps)
-6. Single position only (calibration phase)
+6. One **primary** position; second leg only as **documented liquidity-zone hedge** (see `rules.md` Rule 6)
 7. System value measured by losses prevented, not trades generated
 
 ### Intervention protocol (RED risk state / rule break / cooldown violation)

@@ -124,13 +124,35 @@ The AI tracks cooldown based on **exchange timestamps**, not user self-report. I
 
 ---
 
-## 6. Single Position (recommended for calibration phase)
+## 6. Primary position + optional liquidity-zone hedge (calibration phase)
 
-During the calibration phase (e.g. first 50 compliant trades), **one open position at a time** is **strongly recommended**. Treat “hedges,” “uncorrelated pairs,” or “the other one is at breakeven so it’s free” as extra risk and cognitive load unless you have explicitly graduated this rule.
+During calibration (e.g. first 50 compliant trades), run **one primary thesis** at a time: **one dominant size / one main invalidation (SL)** on the trade you are managing toward your targets.
 
-After enough compliant trades with demonstrated single-position discipline, you may revisit this constraint in your rules and journal.
+### When a second leg is allowed: **liquidity-zone hedge** (documented)
 
-**Why:** Every additional open position multiplies decision surface, monitoring load, and cross-position rationalization. Framing a second position as a “hedge” is a common permission structure at portfolio level.
+A **hedge** is allowed when it is **not** a second independent bet — a **temporary, bounded** overlay to:
+
+- Keep **primary size** because the primary has a **sound, tight SL** and a path to a **further TP**.
+- Pass through a **liquidity / chop zone** with **limited giveback of uPNL** if price rejects: if price bounces, the hedge **protects or realizes** that uPNL per plan; if the **primary SL** hits, loss is **bounded** by what you defined (including uPNL through the zone) — not an open-ended resize game.
+
+**Before opening the hedge** (in your journal / workspace):
+
+- **Primary** — symbol, side, size, SL, TP(s).
+- **Zone** — the structure you are hedging through.
+- **Hedge** — instrument, side, **size cap**, **exit rule** for the hedge leg (price or time).
+- **Combined worst case** — max loss if both legs move against you (in **R** and currency).
+- **Unwind order** — how you flatten (hedge first vs primary) — **before** entry.
+
+If you cannot write the above, treat it as a **second position** (not allowed as a “hedge”).
+
+### Still disallowed
+
+- A **second full thesis** on another instrument for stimulation or “diversification.”
+- **“Uncorrelated pair”** to scratch an itch.
+- **“The other leg is at breakeven so it’s free.”**
+- **Cross-trade financing** without one locked combined plan.
+
+**Why:** Undocumented second legs multiply rationalization. Documented liquidity hedges are risk engineering; undocumented ones are often permission-seeking.
 
 ---
 

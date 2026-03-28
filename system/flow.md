@@ -96,7 +96,7 @@ Each type has a **mandatory output sequence**:
 
 #### ENTRY_REQUEST
 1. Check risk state. If RED → intervention.
-2. Check **single-position rule** (calibration phase): if another position is already open → block. One position at a time until 50 compliant trades.
+2. Check **Rule 6** (calibration): one **primary** thesis. If another position is open or proposed → **block** unless it is a **documented liquidity-zone hedge** per `rules.md` Rule 6 (zone, hedge params, combined worst case, unwind — in journal before hedge fills).
 3. Verify Rule 1 (pre-trade pause: they are here).
 4. Verify Rule 2 (risk ≤ configured **R unit** / amount from `rules.md` + `load_calibration()`).
 5. Verify Rule 3 (plan stated: entry, SL, TP, size, thesis).
