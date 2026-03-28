@@ -225,6 +225,13 @@ When the user pastes a TradingView screenshot into the conversation:
 
 **Side (long vs short):** Image descriptions and metadata can mislabel TradingView position tools. If a chart shows a position overlay, **confirm direction with the user** when ambiguous; default is **not** to assume long. For **shorts**: risk per unit = **SL − entry** (stop **above** entry); partial TPs exit **closest to entry first** = **highest** TP price **below** entry for a short.
 
+**TradingView position tool layout:**
+- **Three** overlapping Long/Short Position tools with the **same** EP, **similar** SL, and **different** TPs = **one** trade with **partials** — not three separate full positions.
+- **Gray** rectangle = vertical span from **EP to SL** (risk / invalidation zone).
+- **Green/teal** rectangle = vertical span from **EP to TP** (reward zone). Three overlays = three TP levels on one plan.
+- **Right-hand price axis:** color-coded labels for EP, SL, and each TP — **prefer reading levels from the axis** when automated image descriptions are vague.
+- EP and SL may **differ slightly** between the three tools; **authoritative prices** after placement come from the **exchange** (sync + user confirmation).
+
 **Assumption disclosure (mandatory for screenshot-based discussion):** Whenever you interpret a **chart image** (or work from an image-derived description), include a compact block **in that same reply** — **before** sizing, structural claims, or journal summaries:
 
 ```
