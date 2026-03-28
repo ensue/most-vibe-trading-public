@@ -23,7 +23,9 @@ Credentials (default): workspace `vault/bitget-api.env` (see VAULT_CANDIDATES in
 Accounting:
     Each successful sync appends `data/balance_history.jsonl`. Full sync also pulls all-time
     USDT `fetch_deposits` / `fetch_withdrawals` (ccxt paginate) and writes `data/funding.json`
-    plus `data/accounting.md` (net external vs swap equity → signed R vs Rule 2 unit).
+    plus `data/accounting.md`. **R labels** are optional: set `exchange/accounting_config.json`
+    (copy from `accounting_config.example.json`) or `MOST_R_UNIT_USD` / `MOST_MENTAL_BANKROLL_USD`
+    in vault — no hardcoded dollar amounts in this script.
 """
 
 import argparse
@@ -45,11 +47,46 @@ VAULT_CANDIDATES = [
 ]
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-
-# Mirrors `most/rules.md` calibration — not exchange balance.
-MENTAL_BANKROLL_USD = 2000.0
-R_UNIT_USD = 40.0
+EXCHANGE_DIR = Path(__file__).resolve().parent
 BALANCE_HISTORY_FILE = "balance_history.jsonl"
+
+
+def load_accounting_config() -> dict[str, float | None]:
+    """
+    Optional risk calibration for R labels in accounting output (not exchange balances).
+    Priority: vault env vars > accounting_config.json > example file (nulls).
+    """
+    example_path = EXCHANGE_DIR / "accounting_config.example.json"
+    path = EXCHANGE_DIR / "accounting_config.json"
+    raw: dict = {}
+    if example_path.exists():
+        raw = json.loads(example_path.read_text(encoding="utf-8"))
+    if path.exists():
+        raw = {**raw, **json.loads(path.read_text(encoding="utf-8"))}
+    for k in list(raw.keys()):
+        if k.startswith("_"):
+            del raw[k]
+
+    def _f(key: str) -> float | None:
+        v = raw.get(key)
+        if v is None or v == "":
+            return None
+        return float(v)
+
+    mental = _f("mental_bankroll_usd")
+    r_unit = _f("r_unit_usd")
+
+    for vault in VAULT_CANDIDATES:
+        if not vault.exists():
+            continue
+        env = dotenv_values(vault)
+        if (env.get("MOST_R_UNIT_USD") or "").strip():
+            r_unit = float(env["MOST_R_UNIT_USD"].strip())
+        if (env.get("MOST_MENTAL_BANKROLL_USD") or "").strip():
+            mental = float(env["MOST_MENTAL_BANKROLL_USD"].strip())
+        break
+
+    return {"mental_bankroll_usd": mental, "r_unit_usd": r_unit}
 
 
 def load_credentials() -> dict[str, str]:
@@ -339,6 +376,8 @@ def build_funding_summary(
     deposits: list,
     withdrawals: list,
     swap_equity: float,
+    mental_bankroll_usd: float | None,
+    r_unit_usd: float | None,
 ) -> dict:
     d_sum = sum(
         float(x.get("amount") or 0) for x in deposits if _tx_confirmed_success(x)
@@ -347,22 +386,25 @@ def build_funding_summary(
         float(x.get("amount") or 0) for x in withdrawals if _tx_confirmed_success(x)
     )
     net_ext = d_sum - w_sum
-    signed_r = (swap_equity - net_ext) / R_UNIT_USD
-    return {
+    signed_r = None
+    if r_unit_usd is not None and r_unit_usd > 0:
+        signed_r = round((swap_equity - net_ext) / r_unit_usd, 4)
+    out: dict = {
         "deposits_usdt_counted": round(d_sum, 8),
         "withdrawals_usdt_counted": round(w_sum, 8),
         "net_external_usdt": round(net_ext, 8),
         "current_swap_equity_usd": round(swap_equity, 8),
         "equity_minus_net_external_usdt": round(swap_equity - net_ext, 8),
-        "cumulative_r_signed_vs_rule_unit": round(signed_r, 4),
-        "mental_bankroll_usd": MENTAL_BANKROLL_USD,
-        "rule_r_unit_usd": R_UNIT_USD,
+        "cumulative_r_signed_vs_rule_unit": signed_r,
+        "mental_bankroll_usd": mental_bankroll_usd,
+        "rule_r_unit_usd": r_unit_usd,
         "caveat": (
             "Net external uses completed on-chain (or internal) deposits/withdrawals from Bitget "
             "wallet API. If USDT was moved only inside Bitget (spot↔futures), totals can still "
             "reconcile with swap equity; if some history is outside API range, numbers drift."
         ),
     }
+    return out
 
 
 def append_balance_snapshot(balance: dict) -> None:
@@ -379,19 +421,41 @@ def append_balance_snapshot(balance: dict) -> None:
     print(f"  appended {path.relative_to(Path(__file__).resolve().parent.parent)}")
 
 
-def generate_accounting_md(summary: dict | None, funding_error: str | None) -> str:
+def generate_accounting_md(
+    summary: dict | None,
+    funding_error: str | None,
+    mental_bankroll_usd: float | None,
+    r_unit_usd: float | None,
+) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     lines = [
         "# Exchange accounting (USDT)",
         "",
         f"Generated: {ts}",
         "",
-        "## Reference (MOST rules)",
-        "",
-        f"- Declared **mental bankroll**: **${MENTAL_BANKROLL_USD:,.0f}** (`most/rules.md`)",
-        f"- Calibration **1R** = **${R_UNIT_USD:,.0f}** (first 50 trades, fixed %)",
+        "## Reference (risk calibration — optional)",
         "",
     ]
+    if mental_bankroll_usd is not None:
+        lines.append(
+            f"- Declared **mental bankroll**: **${mental_bankroll_usd:,.0f}** (from `accounting_config` or vault)"
+        )
+    else:
+        lines.append(
+            "- Declared **mental bankroll**: **not set** — add `mental_bankroll_usd` to "
+            "`exchange/accounting_config.json` or `MOST_MENTAL_BANKROLL_USD` in vault"
+        )
+    if r_unit_usd is not None:
+        lines.append(
+            f"- **1R** (rule unit for sizing) = **${r_unit_usd:,.0f}** (from `accounting_config` or vault)"
+        )
+    else:
+        lines.append(
+            "- **1R** (rule unit): **not set** — add `r_unit_usd` to `exchange/accounting_config.json` "
+            "or `MOST_R_UNIT_USD` in vault to show signed R in the table below"
+        )
+    lines.append("")
+
     if funding_error:
         lines.extend([
             "## Funding API",
@@ -416,13 +480,24 @@ def generate_accounting_md(summary: dict | None, funding_error: str | None) -> s
         f"| **Net external** (deposits − withdrawals) | ${summary['net_external_usdt']:,.2f} |",
         f"| **Current swap USDT equity** (this sync) | ${summary['current_swap_equity_usd']:,.2f} |",
         f"| Equity − net external | ${summary['equity_minus_net_external_usdt']:,.2f} |",
-        f"| **Signed R** (÷ ${summary['rule_r_unit_usd']:.0f} rule unit) | **{summary['cumulative_r_signed_vs_rule_unit']:.2f} R** |",
-        "",
-        "### Reading signed R",
-        "",
-        "- **Positive:** swap equity **above** net external funding (cumulative trading outcome positive vs cash in/out).",
-        "- **Negative:** swap equity **below** net external funding (cumulative loss vs cash in/out, in **R units** at the Rule 2 calibration).",
-        "",
+    ])
+    if summary["cumulative_r_signed_vs_rule_unit"] is not None and r_unit_usd is not None:
+        lines.append(
+            f"| **Signed R** (÷ ${r_unit_usd:,.0f} rule unit) | **{summary['cumulative_r_signed_vs_rule_unit']:.2f} R** |"
+        )
+    else:
+        lines.append("| **Signed R** | — (configure `r_unit_usd` to compute) |")
+    lines.extend(["",])
+
+    if summary["cumulative_r_signed_vs_rule_unit"] is not None and r_unit_usd is not None:
+        lines.extend([
+            "### Reading signed R",
+            "",
+            "- **Positive:** swap equity **above** net external funding (cumulative trading outcome positive vs cash in/out).",
+            "- **Negative:** swap equity **below** net external funding (cumulative loss vs cash in/out, in **R units** at your configured rule unit).",
+            "",
+        ])
+    lines.extend([
         f"_{summary['caveat']}_",
         "",
     ])
@@ -573,6 +648,7 @@ async def main(args: argparse.Namespace) -> None:
         trades_data = []
         transactions_data = []
         accounting_md: str | None = None
+        acc_cfg = load_accounting_config()
 
         if sync_all or args.balance:
             print("Fetching balance...")
@@ -586,7 +662,11 @@ async def main(args: argparse.Namespace) -> None:
                 exchange
             )
             summary = build_funding_summary(
-                deposits_raw, withdrawals_raw, float(balance_data["total"])
+                deposits_raw,
+                withdrawals_raw,
+                float(balance_data["total"]),
+                acc_cfg["mental_bankroll_usd"],
+                acc_cfg["r_unit_usd"],
             )
             funding_payload = {
                 "updated_at": balance_data.get("synced_at"),
@@ -596,7 +676,12 @@ async def main(args: argparse.Namespace) -> None:
                 "api_error": funding_err,
             }
             save("funding.json", funding_payload)
-            accounting_md = generate_accounting_md(summary, funding_err)
+            accounting_md = generate_accounting_md(
+                summary,
+                funding_err,
+                acc_cfg["mental_bankroll_usd"],
+                acc_cfg["r_unit_usd"],
+            )
             save("accounting.md", accounting_md)
 
         if sync_all or args.positions:

@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy to accounting_config.json (gitignored) or set MOST_R_UNIT_USD / MOST_MENTAL_BANKROLL_USD in vault",
+  "mental_bankroll_usd": null,
+  "r_unit_usd": null
+}

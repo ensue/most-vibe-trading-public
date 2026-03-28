@@ -31,8 +31,12 @@ After that, **output shape stays the same**: JSON + `snapshot.md` under `exchang
 | `transactions.json` | Fill-level history (when API returns) |
 | `snapshot.md` | Human-readable roll-up of the above |
 | **`funding.json`** | All-time USDT **deposits** and **withdrawals** (ccxt paginate) + summary |
-| **`accounting.md`** | **Net external** vs **current swap equity** → **signed R** (÷ $40 rule unit vs `most/rules.md`) |
+| **`accounting.md`** | **Net external** vs **current swap equity**; **signed R** only if you configure a rule unit (see below) |
 | **`balance_history.jsonl`** | Append-only **one line per sync** (timestamp + total/free/used) |
+
+### Accounting calibration (no amounts in `sync.py`)
+
+Copy `exchange/accounting_config.example.json` → **`exchange/accounting_config.json`** (gitignored) and set **`mental_bankroll_usd`** and **`r_unit_usd`** to match your `rules.md`. Alternatively set **`MOST_MENTAL_BANKROLL_USD`** and **`MOST_R_UNIT_USD`** in `vault/bitget-api.env` (overrides JSON). If unset, USD columns still populate; **signed R** is omitted.
 
 Full sync runs funding + accounting by default; use `--no-funding` to skip deposit/withdrawal API calls.
 
