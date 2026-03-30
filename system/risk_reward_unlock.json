@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "updated_at": null,
+  "ceiling_max_rr": 20,
+  "promotion_wins_required": 5,
+  "current_unlocked_max_rr": 1,
+  "wins_toward_next_unlock": 0,
+  "notes": "Default ladder: max planned R:R 1:1 until 5 compliant promotion wins unlock 2:1, up to 20:1."
+}

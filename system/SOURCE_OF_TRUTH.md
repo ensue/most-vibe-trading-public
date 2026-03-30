@@ -9,6 +9,12 @@ Universal layout: **no hardcoded dollar amounts in AI rules or `flow.md`**. Fork
 3. **`system/calibration.json`** (gitignored) — copy from `system/calibration.example.json`; optional `currency`, `intervention_recovery_weeks_per_trade_estimate`, etc.
 4. **`rules.md`** — human-readable authority for **phase**, **% of capital**, and how dollar risk is defined (always read this; numbers here override nothing in JSON until you copy them into config).
 
+## R:R unlock ladder
+
+- **Human + machine:** `system/risk_reward_unlock.md` + `system/risk_reward_unlock.json`
+- **Helpers:** `from system.rr_unlock import load_rr_unlock, planned_max_rr, validate_plan_rr`
+- **CLI:** `python tools/risk_reward_unlock.py status`
+
 ## Machine-readable merge
 
 `python` API (same merge as accounting + system extras):

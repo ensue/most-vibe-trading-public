@@ -89,6 +89,14 @@ Multiple separate entries = multiple risk budgets unless a single combined stop 
 - **Default templates** if you have not chosen yet (pick one and lock it): **33% / 33% / 34%**, or **50% / 30% / 20%** (front-loads profit; reduces giveback risk). Avoid defaulting most size to the farthest TP (**moonshot attachment**).
 - After the **first** partial, Rule 4 allows moving the stop **toward entry or better** (e.g. breakeven). Decide **before** entry whether BE triggers after TP1 only or after TP2 as well.
 
+### R:R unlock ladder (gamification)
+
+- **State file:** `system/risk_reward_unlock.json` — read with **`load_rr_unlock()`** in `system/rr_unlock.py` or the CLI `python tools/risk_reward_unlock.py status`.
+- **Before locking a plan:** Compute **planned max R:R** (farthest TP vs SL — see `risk_reward_unlock.md`). It must be **≤ `current_unlocked_max_rr`** or the plan is **invalid** until TPs are tightened or a tier is unlocked.
+- **Promotion:** `promotion_wins_required` **compliant wins** with planned max R:R at lock ≤ current cap and realized **R > 0** → increment progress (`python tools/risk_reward_unlock.py record-win` after journal entry).
+- **Ceiling:** Default **20:1** max (`ceiling_max_rr`).
+- This **does not** relax Rule 2 dollar risk or Rule 4 SL discipline — it only caps how **far** your **reward** may be vs **1R** on the plan.
+
 **Why:** A plan spoken out loud to another entity is harder to corrupt than a plan that exists only in your head.
 
 ---

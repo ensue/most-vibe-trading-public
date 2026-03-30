@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "updated_at": null,
+  "ceiling_max_rr": 20,
+  "promotion_wins_required": 5,
+  "current_unlocked_max_rr": 1,
+  "wins_toward_next_unlock": 0,
+  "notes": "Copy to risk_reward_unlock.json to track mutable state; see risk_reward_unlock.md"
+}

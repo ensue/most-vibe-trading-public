@@ -41,6 +41,8 @@ MOST doesn't try to make you a better analyst. It's built for the gap between kn
 
 **XP progression** — Gamified discipline tracking. Every compliant trade, every verification, every resisted urge earns XP. Every violation costs. Visible in every response, not buried in a file.
 
+**R:R unlock ladder** — Optional cap on planned max reward:risk (start at 1:1, unlock up to 20:1 with compliant wins). See `system/risk_reward_unlock.md` and `tools/risk_reward_unlock.py`.
+
 **Journal without the cringe** — Positions, mood, reflections, patterns. Structured markdown, not essays. The AI writes it for you from the conversation.
 
 **Growth math** — Monte Carlo (5,000 paths) + deterministic projection. Context for variance and goals, not a lecture.

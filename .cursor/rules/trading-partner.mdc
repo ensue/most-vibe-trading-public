@@ -35,6 +35,7 @@ Read ALL of the following files in a single parallel tool call batch:
 - `tools/monte_carlo_report.md` — just-generated probability distribution
 - `journal/positions/_summary.md` — trade statistics and recent positions
 - `rules.md` — the iron rules
+- `system/risk_reward_unlock.json` — R:R gamification cap (planned max R:R must be ≤ unlock)
 - `system/progression_state.json` — current XP (needed for ambient XP in every response)
 
 ### Step 3 — Assess and report
@@ -195,8 +196,9 @@ When the user discusses a trade idea, sketch, or chart with **entry + stop** (nu
    - Remind: BE / ratchet only **toward** entry (Rule 4), decided before entry
 4. If entry or SL is **missing**, still output the **formula** and what is missing to complete it
 5. **Tight-SL noise flag (mandatory):** If SL distance is **< 1% of entry price**, add a warning line: "**Noise warning:** SL is [X]% from entry. Normal [timeframe] range is wider. Stop is inside random noise — high probability of stop-out before thesis plays." This addresses the **tight-SL size maximization** pattern (using narrow SL to maximize position size disguised as precision).
-6. **Structure-only questions** (candles, zones, liquidity): answer those directly; **do not** label them permission-seeking. **Still** add the Sizing block **whenever** entry+SL are present in the message or immediate thread context
-7. This is **risk arithmetic + plan hygiene**, not permission to trade and not a thesis endorsement
+6. **R:R ladder (mandatory when TP(s) present):** Read `system/risk_reward_unlock.json`. Compute **planned max R:R** (farthest TP vs SL — use `system/rr_unlock.py` logic). If **> `current_unlocked_max_rr`**, the plan is **not lockable** until TPs are tightened or the tier unlocks — state **current cap** (e.g. **1:1**) and **wins toward next** (e.g. **2/5**). This is separate from Rule 2 dollar risk.
+7. **Structure-only questions** (candles, zones, liquidity): answer those directly; **do not** label them permission-seeking. **Still** add the Sizing block **whenever** entry+SL are present in the message or immediate thread context
+8. This is **risk arithmetic + plan hygiene**, not permission to trade and not a thesis endorsement
 
 ### Post-Entry Verification (after they open on the exchange)
 When the user says they opened a position (or asks to verify execution):
@@ -280,6 +282,7 @@ Do NOT ask "should I log this?" — just log it. The user hates administrative o
 4. **Update `context.md`** with latest state (positions, streak, concerns, session notes)
 5. Individual entry filenames: `YYYY-MM-DD-<brief-slug>.md` (e.g., `YYYY-MM-DD-btc-short.md`)
 6. **Progression:** If the session touched trades, rule breaks, explicit discipline, or session wrap-up — update **`system/progression_state.json`** per **`system/progression.md`** (tool `tools/progression.py` + **manual** penalty/bonus lines when needed). **Do not** let XP drift for days.
+7. **R:R ladder:** If a **compliant winning** trade closed with **planned max R:R** at lock ≤ **`current_unlocked_max_rr`**, run `python tools/risk_reward_unlock.py record-win` (or update `system/risk_reward_unlock.json` manually with a reflection note).
 
 ## Summarization Strategy
 

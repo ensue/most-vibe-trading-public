@@ -47,6 +47,7 @@ Minimum reads for **every** response that touches trading:
 | `journal/chapters/chapter-*-live.md` | Live trajectory — WHERE IS THE STORY GOING |
 | `exchange/data/snapshot.md` | Latest exchange truth (if just synced) |
 | `rules.md` | Iron rules — verify compliance |
+| `system/risk_reward_unlock.json` | R:R gamification cap — planned max R:R must be ≤ current tier |
 | `journal/positions/_summary.md` | Active positions, stats, streak |
 | `system/progression_state.json` | XP — needed for ambient display in every response |
 
