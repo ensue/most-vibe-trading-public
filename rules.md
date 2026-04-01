@@ -71,6 +71,13 @@ Max **dollar risk** for this trade = Rule 2 amount (fixed % of declared capital,
 
 **One line to state in the plan:** “If stopped, loss = [N]R at SL ___ with size ___.”
 
+**Fee drag check (mandatory):** AI computes `fee_drag = round_trip_fee_rate / SL_distance_%` in every sizing block:
+- **OK** (SL > 3%): fee drag < 4% of R — proceed.
+- **WARNING** (SL 1-3%): fee drag 4-12% of R — AI warns; consider wider SL or limit orders.
+- **BLOCKED** (SL < 1%): fee drag > 12% of R — AI refuses to size. SL must move to structural level > 1% from entry.
+
+Round-trip fee rates: **taker/taker 0.12%**, maker/taker 0.08%, **maker/maker 0.04%** (typical crypto futures). AI assumes taker/taker unless user specifies limit orders.
+
 **Tight-SL warning:** If SL distance is **< 1%** of entry price, the stop is inside normal noise. That setup **maximizes position size**, not edge — escalation dressed as precision. The AI should flag this automatically.
 
 **Liquidation check (leveraged positions):** State liquidation price at intended leverage before entry. Liquidation must be beyond the stop (further from entry). If liquidation sits between entry and SL: **invalid** plan. Reduce leverage or add margin.

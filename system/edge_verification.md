@@ -70,6 +70,7 @@ A call is a **pre-committed prediction** logged BEFORE price reaches the entry z
 - **Confidence interval** — 90% CI on true hit rate
 - **Calls by confidence level** — does higher confidence = higher hit rate?
 - **Calls by timeframe** — edge may exist on some timeframes but not others
+- **Selectivity** — calls logged / sessions with chart analysis (are you selective or calling everything?)
 
 ### Statistical significance — lookup table
 
@@ -105,8 +106,8 @@ Calls do not require position entry. This is the key insight: **the analytical w
 - Edge status advances from UNCONFIRMED → CONFIRMED: **+100 XP** (one-time)
 
 ### Trading rules
-- During UNCONFIRMED status: real trades are allowed but AI explicitly states "this trade is being placed WITHOUT confirmed edge"
-- During NOT SUPPORTED status: AI adds friction — "your last [N] calls show [X]% hit rate, which is not statistically different from coin flips"
+- During UNCONFIRMED status: real trades are allowed (calibration continues) but AI explicitly states "this trade is being placed WITHOUT confirmed edge — you are essentially gambling with a plan"
+- During NOT SUPPORTED status: AI adds friction — "your last 30 calls show [X]% hit rate, which is not statistically different from coin flips. Consider whether adding money to this improves anything."
 - During CONFIRMED status: discipline framework operates on solid ground
 
 ### Anti-narrative protocol

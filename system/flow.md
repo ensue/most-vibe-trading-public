@@ -100,16 +100,18 @@ Each type has a **mandatory output sequence**:
 
 #### ENTRY_REQUEST
 1. Check risk state. If RED → intervention.
-2. Check **Rule 6** (calibration): one **primary** thesis. If another position is open or proposed → **block** unless it is a **documented liquidity-zone hedge** per `rules.md` Rule 6 (zone, hedge params, combined worst case, unwind — in journal before hedge fills).
+2. Check **Rule 6** (calibration): one **primary** thesis. If another position is open or proposed → **block** unless it is a **documented liquidity-zone hedge** per `rules.md` Rule 6 (zone, hedge params, combined worst case, unwind order — all in journal **before** hedge fills).
 3. Verify Rule 1 (pre-trade pause: they are here).
 4. Verify Rule 2 (risk ≤ configured **R unit** / amount from `rules.md` + `load_calibration()`).
 5. Verify Rule 3 (plan stated: entry, SL, TP, size, thesis).
-6. **Tight-SL check:** if SL < 1% from entry → noise warning flag (see `rules.md`).
-7. **Liquidation check:** at stated leverage, compute liq price. If liq is between entry and SL → **INVALID**. State minimum leverage reduction needed.
-8. Verify Rule 5 (cooldown respected if prior loss).
-9. **Pre-mortem (mandatory):** "Describe the scenario where this trade leads to you breaking rules — not just the stop-out, but what you do in the 5 minutes after." If user can articulate the cascade scenario, they've pre-loaded recognition. If not, they're not seeing the risk.
-10. If all pass → Sizing block (in **R-multiples first**) + XP preview ("This plan is worth **+~45 XP** if executed per plan") + "Lock this plan? If yes, open on exchange and sync for verification."
-11. Log locked plan to `journal/positions/YYYY-MM-DD-*-pre-trade.md`
+6. **Fee drag check (MANDATORY — before sizing):** Follow the step-by-step recipe in `trading-partner.mdc` → "Auto-deliver: position size + partials" → step 5. Summary: `SL_pct = 100 * |entry - SL| / entry`. `drag_pct = 100 * fee_rt / SL_pct` (fee_rt = 0.12 taker/taker, 0.08 maker/taker, 0.04 maker/maker). Verdict: **BLOCKED** if `SL_pct < 1.0`, **WARNING** if `SL_pct < 3.0`, **OK** otherwise. If BLOCKED: refuse to size.
+7. **Tight-SL check:** if `SL_pct < 1.0` → noise warning flag (overlaps with BLOCKED above; state both).
+8. **Liquidation check:** at stated leverage, compute liq price. If liq is between entry and SL → **INVALID**. State minimum leverage reduction needed.
+9. Verify Rule 5 (cooldown respected if prior loss).
+10. **Edge status reminder:** Read `journal/calls/_summary.md`. If UNCONFIRMED: "This trade is being placed WITHOUT confirmed edge. Edge status: UNCONFIRMED ([N] calls)."
+11. **Pre-mortem (mandatory):** "Describe the scenario where this trade leads to you breaking rules — not just the stop-out, but what you do in the 5 minutes after." If user can articulate the cascade scenario, they've pre-loaded recognition. If not, they're not seeing the risk.
+12. If all pass → Sizing block (in **R-multiples first**) + XP preview ("This plan is worth **+~45 XP** if executed per plan") + "Lock this plan? If yes, open on exchange and sync for verification."
+13. Log locked plan to `journal/positions/YYYY-MM-DD-*-pre-trade.md`
 
 #### POST_ENTRY
 1. Sync exchange.
