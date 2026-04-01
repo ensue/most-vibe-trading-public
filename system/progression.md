@@ -69,7 +69,7 @@ Scored from 0 to 40 per meaningful setup review (call OR trade plan):
 ## Penalties
 
 - SL widening attempt or action: **-60 XP**
-- New trade without pre-trade pause: **-40 XP**
+- New trade without pre-trade pause AND no Wick Protocol (no workspace visit within 5 min): **-40 XP**
 - Serial re-entry after stop without cooldown: **-50 XP**
 - Missing protective order after opening (if plan required): **-35 XP**
 - Plan corruption language during open trade without plan lock update: **-25 XP**

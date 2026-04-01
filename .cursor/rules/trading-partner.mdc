@@ -229,7 +229,7 @@ If something looks like one of the documented patterns (escalation, serial entry
 
 ### Enforce the Seven Rules
 Every trade conversation must verify compliance with `rules.md`:
-1. Pre-trade pause happened (they're here talking to you)
+1. Pre-trade accountability: either (a) pre-trade pause happened, or (b) **Wick Protocol** — user entered fast, came to workspace within 5 min, SL set at entry. If Wick: run post-entry verification immediately.
 2. Risk is within the fixed % / Kelly limit
 3. Plan is stated: entry, SL, TP, size, thesis + **pre-mortem** + **liq check** + **tight-SL flag**
 4. SL is NOT being widened

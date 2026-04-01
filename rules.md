@@ -10,13 +10,34 @@ There is no such thing as "I'm just re-entering where I was." You are opening a 
 
 ---
 
-## 1. Pre-Trade Pause
+## 1. Pre-Trade Accountability
 
+Two paths to a compliant entry. **Both require workspace involvement** — the difference is timing.
+
+### Path A: Standard (preferred)
 Before placing any trade, open this workspace and talk to AI.
 State the thesis. Describe the setup. Hear the response.
 Minimum 60 seconds between "I see a setup" and "I place the order."
 
-**Why:** The compression of "I think" → "I see" → "I know" happens fast enough to evade self-monitoring. The pause breaks the chain.
+### Path B: Wick Protocol (time-sensitive entries)
+When a wick or momentum event creates a narrow entry window:
+
+1. **Enter on the exchange** — but SL must be set AT THE MOMENT OF ENTRY.
+2. **Come to workspace within 5 minutes** of the fill.
+3. **State the full plan retroactively:** entry, SL, TP, size, thesis — same as Rule 3.
+4. **AI runs post-entry verification** (sync → compare → PASS/MISMATCH).
+5. **Fee Drag Check runs retroactively.** If BLOCKED → widen SL or close.
+6. If the entry fails Rule 2/6 or has no SL on exchange → **MISMATCH**.
+
+**What Wick Protocol is NOT:**
+- A license to skip SL ("I'll set it later")
+- A workaround for cooldown (Rule 5 still applies)
+- An excuse for phone trading (laptop only)
+- Serial entry in disguise (re-entering after a stop is NOT a wick)
+
+**Edge verification:** "I'm good at wicks" is testable. Tag wick calls in `journal/calls/` with `wick: true`. Compare wick vs non-wick hit rates after 20+ entries.
+
+**Why both paths exist:** The pre-trade pause catches impulsive entries. Legitimate wicks are real — the market does not wait. The Wick Protocol preserves accountability without penalizing speed. The constraint: **SL must exist from second zero.** An entry without SL is not a wick trade — it's gambling.
 
 ---
 
