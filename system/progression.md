@@ -81,12 +81,14 @@ Scored from 0 to 40 per meaningful setup review (call OR trade plan):
 
 **Problem:** The old system allowed a single large XP session to erase all penalties. This created a perverse incentive: gamble freely, then do one clean session to "reset."
 
+**Definition — "session":** One chat thread (Cursor conversation) that touches trading, analysis, or review. Multiple messages in the same thread = one session. A new chat thread = a new session.
+
 **Solution:** Penalties create a **discipline debt** that is worked off slowly:
 
-1. **Penalty floor per chapter:** The sum of all penalties in a chapter sets a floor. To advance to the next level, total XP must exceed the floor by at least **2x the penalty amount** in positive XP.
-2. **Single-session cap:** No single session can contribute more than **+80 XP** net (after penalties). This prevents moonshot XP events.
-3. **Penalty decay:** Penalties decay by **10%** after each **consecutive compliant session** (not calendar days — actual sessions with compliance).
-4. **No retroactive erasure:** Reversed penalties are logged as separate positive entries, not deletion of the penalty record.
+1. **Penalty floor per chapter:** Sum all negative XP entries in the current chapter → `penalty_total` (negative number). To advance to the next level, the user must earn positive XP ≥ **2 × |penalty_total|** within the chapter, ON TOP of the level threshold.
+2. **Single-session cap:** No single session can contribute more than **+80 XP** net. If a session yields +120 raw, log +80. Negative sessions have no floor.
+3. **Penalty decay:** After each **consecutive compliant session** (zero penalty entries), reduce `|penalty_total|` by **10%**. A non-compliant session resets the consecutive count to 0.
+4. **No retroactive erasure:** Reversed penalties are logged as separate positive entries with `key: penalty_reversal`, not deletion of the original.
 
 ## Coach Adjustment Lane (bounded)
 

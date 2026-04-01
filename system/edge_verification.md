@@ -71,6 +71,23 @@ A call is a **pre-committed prediction** logged BEFORE price reaches the entry z
 - **Calls by confidence level** — does higher confidence = higher hit rate?
 - **Calls by timeframe** — edge may exist on some timeframes but not others
 
+### Statistical significance — lookup table
+
+AI does NOT need to compute p-values. Use this table. For N triggered calls with K hits, find the **minimum K needed** for edge to be significant (one-tailed binomial, p ≤ 0.10 vs null hypothesis of 50%):
+
+| N (triggered) | Min K for CONFIRMED | Hit rate at threshold |
+|---------------|--------------------|-----------------------|
+| 30 | 19 | 63.3% |
+| 40 | 25 | 62.5% |
+| 50 | 30 | 60.0% |
+| 60 | 36 | 60.0% |
+| 75 | 44 | 58.7% |
+| 100 | 57 | 57.0% |
+
+**How to use:** Count K (hits) out of N (triggered calls). If K ≥ threshold for that N → **CONFIRMED**. If K < threshold and N ≥ 30 → **NOT SUPPORTED**. If N < 30 → **UNCONFIRMED**.
+
+For N values not in the table, interpolate or use the nearest lower row.
+
 ### The 30-call minimum
 
 Before 30 tracked calls with outcomes, the system treats edge as UNCONFIRMED. This is not punitive — it's statistical necessity. With fewer than 30 data points, you cannot distinguish skill from luck at any reasonable confidence level.

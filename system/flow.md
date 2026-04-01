@@ -46,7 +46,7 @@ Minimum reads for **every** response that touches trading:
 | File | Why |
 |------|-----|
 | `context.md` | Current chapter, status, concerns, recent activity |
-| `journal/chapters/chapter-*-live.md` | Live trajectory — WHERE IS THE STORY GOING |
+| `journal/chapters/chapter-N-live.md` | Live trajectory — find the **highest-numbered** `chapter-N-live.md` |
 | `exchange/data/snapshot.md` | Latest exchange truth (if just synced) |
 | `rules.md` | Iron rules — verify compliance |
 | `system/risk_reward_unlock.json` | R:R gamification cap — planned max R:R must be ≤ current tier |
@@ -125,7 +125,7 @@ Each type has a **mandatory output sequence**:
 3. If partial close → update position journal, recalculate remaining exposure.
 4. If "hmm" / uncertainty → reflect structure, do **not** encourage exit or hold — state facts.
 5. **Cognitive defusion** — watch for plan corruption language ("based on what I see now…", "I think this is equivalent to…", "the wick shows smart money"). Respond with: "I notice you're having the thought that [restate their rationalization]. Is that part of the plan you locked cold, or a thought your activated brain just generated?" This creates distance between the person and the thought — not suppressing it, just labeling it as a mental event rather than a fact.
-6. Track **decision count** for this session. Each message involving a trading decision increments the counter (see Decision Fatigue Budget in §E).
+6. Track **decision count** for this session. Each message involving a trading decision increments the counter (see Decision Fatigue Budget in §F).
 
 #### POST_TRADE
 1. Sync exchange.
