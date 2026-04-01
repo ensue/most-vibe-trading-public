@@ -21,6 +21,8 @@ Every user message falls into **one or more** of these types. Classify **before*
 | **RULE_BREAK** | Confession, detected violation, break pressure | "zrobiłem coś głupiego", break revocation intent |
 | **SYSTEM** | Tool/infra question, rule change, meta-process | "dodaj nowy tool", "zmień zasadę X" |
 | **EXPLORATION** | Structure question, market read, no trade intent | "co robi ta świeca?", candle/zone/liquidity |
+| **EDGE_CLAIM** | User invokes edge belief, skill self-assessment | "I have edge", "I'm good at TA", "just need discipline" |
+| **CALL_LOG** | User wants to log a prediction or update call outcome | "I want to log a call", setup discussion with levels but no trade intent |
 
 Multiple types can co-occur (e.g. **POST_TRADE** + **STATE** + **RULE_BREAK**).
 
@@ -49,6 +51,7 @@ Minimum reads for **every** response that touches trading:
 | `rules.md` | Iron rules — verify compliance |
 | `system/risk_reward_unlock.json` | R:R gamification cap — planned max R:R must be ≤ current tier |
 | `journal/positions/_summary.md` | Active positions, stats, streak |
+| `journal/calls/_summary.md` | **Edge verification status** — needed for anti-narrative and status block |
 | `system/progression_state.json` | XP — needed for ambient display in every response |
 
 **Conditional** deeper reads (add when input type requires):
@@ -165,7 +168,25 @@ Each type has a **mandatory output sequence**:
 1. Answer the structure/market question directly.
 2. Do **not** label as permission-seeking.
 3. If entry + SL are in the message → still add **Sizing** block.
-4. Log to `journal/reflections/` if the observation is worth preserving.
+4. **Always offer:** "Want to log this as a call? +10 XP for a structured prediction, zero money at risk."
+5. Log to `journal/reflections/` if the observation is worth preserving.
+
+#### EDGE_CLAIM
+1. Read `journal/calls/_summary.md` — check edge status.
+2. If **UNCONFIRMED** (< 30 calls): "Your edge hypothesis is **UNCONFIRMED**. [N] calls logged, need 30+ with outcomes. The calls journal exists to test this — log predictions to find out."
+3. If **NOT SUPPORTED** (≥ 30, not significant): "Your last [N] calls show [X]% hit rate, which is not statistically different from coin flips. Data does not currently support the edge belief."
+4. If **CONFIRMED**: "Edge confirmed at [X]% over [N] calls. The discipline conversation is on solid ground."
+5. Do **not** argue about whether the user "feels" they have edge. The data answers the question.
+
+#### CALL_LOG
+1. Help user structure the call per `journal/calls/TEMPLATE.md`.
+2. Verify all required fields: symbol, TF, direction, entry zone, SL, TP, thesis, confidence, expiry.
+3. Timestamp the call. **Check** that entry zone has NOT already been hit.
+4. Save to `journal/calls/YYYY-MM-DD-symbol-direction.md`.
+5. Update `journal/calls/_summary.md` statistics.
+6. Award XP: **+10** for structured call, **+up to 40** Analysis Quality XP.
+7. Frame it: "Call logged. Pure edge verification — no money at risk, full XP earned."
+8. **Do NOT** automatically transition to sizing or entry coaching. The call stands on its own.
 
 ### E. Post-response logging (every substantive message)
 

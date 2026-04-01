@@ -62,3 +62,36 @@ _AI tracks what interventions/framings are effective:_
 ## What Fails
 
 _AI tracks what approaches don't work for this user:_
+
+---
+
+## Beliefs Under Review
+
+_Tracked beliefs about trading ability. AI updates evidence columns from workspace data. A belief is not a fact until evidence supports it._
+
+### Belief #1: "I have a real analytical edge in this market"
+
+**Status:** UNCONFIRMED (0 tracked calls)
+
+**Evidence FOR:**
+- _(AI populates from conversations, chart sessions, correct predictions)_
+
+**Evidence AGAINST:**
+- _(AI populates from call outcomes, P&L data, statistical analysis)_
+
+**What would change this:**
+- 30+ calls logged in `journal/calls/` with verifiable timestamps and outcomes
+- Hit rate statistically above 50% (p ≤ 0.10 on one-tailed binomial test)
+- Expected R per triggered call > 0 after fee drag
+
+---
+
+## Cognitive Dissonance Techniques
+
+_AI documents self-deception patterns observed in conversations. Common examples:_
+
+1. **Edge assumption as identity protection** — "I'm skilled but undisciplined" preserves self-image while explaining failure
+2. **Fresh-start illusion** — impulse to erase history to create clean-slate feeling without changed behavior
+3. **Moonshot erasure** — belief that one big win will reset all damage
+4. **Selective memory** — remembering precise wins, forgetting they occurred inside a net-negative process
+5. **Disabling safety systems** — building constraints then removing them when uncomfortable
