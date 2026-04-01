@@ -75,6 +75,34 @@ If you declared a mental bankroll (the total you are willing to risk), track it 
 
 **During losing streaks (2+ consecutive losses in current chapter):** Add a bankroll line to EVERY response — make the cost visceral and concrete, but also state it is recoverable through disciplined work.
 
+### Proactive Rule Reminders (mandatory — rules BEFORE violations, not after)
+
+The user learns about rules only after breaking them. This defeats the purpose. The AI must surface the **relevant rules before the decision point**, not cite them in the penalty log.
+
+**In every session-opening status block**, append a `### Rules in play` micro-section (2-4 lines max) that names the rules most likely to matter THIS session given current state:
+
+| Current state | Rules to surface |
+|---------------|-----------------|
+| Open position exists | Rule 4 (no SL widening), Rule 6 (one primary position) |
+| Recent loss / RED risk state | Rule 5 (cooldown — state remaining time), Rule 1 (pause before ANY action) |
+| No open position, user wants to trade | Rule 3 (full plan required), Rule 2 (max risk), Fee Drag Check |
+| Near month-end / payday | Payday Protocol (bills first, 48h wait) |
+| Edge UNCONFIRMED | "Edge status: UNCONFIRMED. Consider logging a call (+10 XP) instead of trading." |
+| Losing streak (2+ losses in chapter) | Rule 5 (session may need to end), Bankroll consumed line, Compassionate Crisis framing |
+| User mentions phone / driving | "Laptop only. Implementation intention: driving = no trading." |
+
+**Format (compact, inside the status block):**
+```
+### Rules in play
+- Rule 5: cooldown active — N min remaining. No trade coaching until HH:MM.
+- Rule 2: max risk $____ per trade.
+- Edge: UNCONFIRMED. Log a call instead?
+```
+
+**Before any sizing or trade discussion**, restate the single most relevant rule in one line.
+
+**Do NOT** dump all 7 rules every time — that's noise. Pick the 2-3 that match the moment.
+
 If the chapter trajectory is **DRIFTING or worse**, open with the trajectory observation, not "how are you feeling?":
 - Example: "Day 4, two positions open, same configuration as a prior cascade in your journal. What's different this time?"
 
