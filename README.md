@@ -1,101 +1,171 @@
 # MOST — Mental Operating System for Trading
 
-An AI accountability partner that lives in your IDE. Not a trading bot. Not a signal service. Not a journal app.
+You already know how to trade. You've proven it a hundred times — in hindsight, in simulation, in the first five minutes after opening the exchange when everything is clear and cold.
 
-MOST is the layer between your analysis and your execution — it **syncs live from the exchange**, **maps your psychological patterns**, **builds a personalized operating manual around your specific brain**, and deploys interventions at the exact moment your plan starts to corrupt.
-
-> **The insight:** Most traders don't fail because of bad analysis. They fail because the market is being used to regulate an internal state — boredom, emptiness, identity wound, stimulation deficit. As long as that's true, any real edge gets hijacked. MOST makes the regulation visible so the edge can operate cleanly.
+The problem is what happens next.
 
 ---
 
-## What Makes This Different From Everything Else
+## The Pattern
 
-| What you've tried | What MOST does differently |
-|---|---|
-| "I need more discipline" | Maps **why** discipline fails — the specific psychological mechanism, not the symptom |
-| Generic trading journal | AI writes it from conversation. Structured. Positions, mood, patterns, charts — no essays |
-| Risk management rules | Rules + **verification loop**: plan → execute → sync → AI compares → PASS/MISMATCH |
-| Post-mortem after blowup | **Live trajectory prediction** — danger flagged before it arrives |
-| "Don't be emotional" | Research-backed psychological interventions at exact trigger moments |
-| Willpower | Engineering: friction, pre-commitment, decision surface minimization |
-| One-size-fits-all method | **Personalized modus operandi** built from investigation of YOUR specific patterns |
+You open the exchange. You see the balance. There's a brief, clean window — maybe five minutes — where your analysis is genuinely good. Cautious. Structural. The best version of you.
+
+Then the position is open. For a while, you don't care. Days, maybe. Then the green numbers start ticking up, and your brain converts them to hourly wages, rent payments, months of freedom. That conversion is the beginning of the end, but it feels like winning.
+
+The first correction hits a level your plan didn't account for. Because the plan assumed price would go straight to your target. It never does, but you never plan for that.
+
+Now you're managing. Partial TP? Hedge? Move the stop? Each decision creates a new decision surface your plan didn't cover. Each decision costs cognitive energy. By the fifth micro-decision, your analytical system is exhausted and you're betting red or green like it's a slot machine.
+
+Or maybe you got stopped out. Now the voice says: one more trade. Same pair. Bigger size. You know this voice. You've heard it a thousand times. You've obeyed it a thousand times. You know exactly how it ends, and you do it anyway.
+
+The belief underneath: **"I'm skilled but undisciplined."** This belief must be true, because if it isn't, then the 10,000 hours of chart-staring were wasted, and there is no redemption story coming. So the belief survives. And the loop continues.
+
+**If you read this and thought "that's me" — this system was built for that exact moment.**
+
+---
+
+## What This Is
+
+MOST is an AI accountability partner that lives in [Cursor](https://cursor.com) (AI-native IDE). Not a bot. Not signals. Not another journal app you'll abandon in a week.
+
+It syncs live from your exchange. It remembers your patterns when you forget them. It deploys research-backed psychological interventions at the exact moment your plan starts to corrupt — using your own numbers, your own history, your own words from when you were thinking clearly.
+
+And it does one thing no other trading tool has ever attempted: it investigates **why you actually trade** — not the story you tell yourself, but the mechanism underneath — and builds a personalized operating manual around YOUR specific brain.
+
+```bash
+git clone https://github.com/ensue/most-vibe-trading-public.git
+```
+
+Free. Open source. MIT licensed. Your data stays on your machine.
+
+---
+
+## Why Everything Else Failed
+
+You've tried rules. You've tried journals. You've tried position size calculators and risk management frameworks and accountability groups and "just be disciplined."
+
+Here's why none of it worked:
+
+**Rules without investigation are noise.** "Don't move your stop" is a rule. But when you're staring at unrealized profit that equals two months of rent, the rule doesn't exist anymore. It was written by a different person in a different state. The activated version of you has access to a sophisticated rationalization engine that can justify anything — and you're too smart for your own rules to contain you.
+
+**The discipline problem is not a discipline problem. It is a regulation problem.** The market provides something your life currently doesn't — stimulation, aliveness, felt power, identity confirmation, proof of earned worth. As long as the market is the primary supplier of that thing, your edge (real or imagined) will always get hijacked by the supply function. You're not trading the market. You're trading your internal state.
+
+**Until you know what that thing is, for you specifically, rules will keep failing.** MOST is built to find it.
 
 ---
 
 ## The Three Layers
 
-### Layer 1: Exchange Sync + Verification
+### Layer 1: Live Exchange Sync + Mechanical Verification
 
-Every session starts with `sync.py` — live balances, positions, recent trades from your exchange (Bitget default, any [ccxt](https://github.com/ccxt/ccxt)-supported exchange). The AI compares what's on the exchange to what you agreed. Not opinion — facts.
+Every session starts with a sync — your real balances, positions, and trades pulled directly from the exchange via [ccxt](https://github.com/ccxt/ccxt) (Bitget default, 100+ exchanges supported).
+
+You state a plan. Entry, stop, target, size, thesis. The AI locks it. You execute on the exchange. You sync again. The AI compares what's on the exchange to what you agreed:
+
+**PASS** or **MISMATCH.**
+
+Not opinion. Not approval. Verification. Did the human do what the human said it would do? If not, the mismatch is named, logged, and tracked. No soft language.
 
 ### Layer 2: Psychological Investigation
 
-MOST doesn't assume it knows your problem. It runs a structured investigation:
+This is where MOST diverges from every other tool.
 
-- **What does the market give you in the first 30 seconds?** (power? stimulation? escape?)
-- **What state appears before the urge?** (boredom? emptiness? status injury?)
-- **What is the full sequence from opening the exchange to blowing up?**
-- **What real sources of aliveness exist outside the market?**
+The AI runs a structured investigation — not generic personality typing, but operational mechanism-finding:
 
-Findings accumulate in `synthesis/mechanism-map.md`. When they recur enough to be operational truth, they promote to `profile.md`. This is not therapy — it is mechanism-finding. The same approach that works for debugging code, applied to debugging behavior.
+- **What happens in the first 30 seconds after you open the exchange?**
+- **What internal state precedes the urge to trade?**
+- **What is the full phase sequence from opening to blowup?**
+- **What does the market give you that nothing else currently does?**
+- **What are the real, non-market sources of aliveness in your life?**
+
+Findings accumulate in `synthesis/mechanism-map.md`. The same approach that works for debugging code — isolate the mechanism, name it, make it reproducible, then engineer around it — applied to debugging behavior.
+
+This is not therapy. This is root cause analysis.
 
 ### Layer 3: Personalized Playbook
 
-From the investigation, MOST builds `playbook/modus-operandi.md` — a trading operating manual designed around YOUR psychology:
+From the investigation, the system builds `playbook/modus-operandi.md` — a trading method designed around your failure modes:
 
-- **Trade structure** chosen to match your decision-fatigue tolerance (not a generic "use partials")
-- **Named traps** with recognition cards (your patterns, your trigger signs, your countermeasures)
-- **Zero-decision position management** — everything pre-committed, nothing left to real-time judgment
-- **Post-trade protocols** that specifically address YOUR post-trade failure modes
-- **Between-trades menu** — what to do when flat and restless that isn't gambling
-- **Progression path** — how to earn more freedom over time with compliance data
+- **Trade structure** matched to your decision-fatigue profile (not generic "use partials")
+- **Named traps** — your patterns, given names, with recognition cards you can spot in real-time
+- **Zero-decision position management** — every action pre-committed before entry; nothing left to real-time judgment when you're activated
+- **Post-trade protocols** that specifically counter YOUR post-trade failure modes
+- **State regulation map** — which internal states are dangerous, which are safe, what helps in each
+
+The playbook isn't written from a textbook. It's written from YOUR investigation. Two traders using MOST will have different playbooks because they have different mechanisms.
+
+---
+
+## Named Traps (examples from real investigation)
+
+These aren't hypothetical. They were surfaced through actual investigation sessions and given names so they can be recognized in real-time:
+
+| Trap | What the brain says | What's actually happening |
+|------|--------------------| -------------------------|
+| **Recovery shortcut** | "One big trade fixes everything" | Every cascade you've ever had started with this sentence |
+| **Small-position revulsion** | "This $3 profit isn't worth my time" | The root cause of all oversizing — disciplined size doesn't produce the feeling you're looking for |
+| **Reversal-after-close** | "If I closed, I should reverse, otherwise closing was pointless" | Every exit becomes a new unplanned entry |
+| **Post-partial vacuum** | "This small runner is boring, let me find something else" | Context-switching mid-position leads to hedges, cross-financing, chaos |
+| **uPNL-to-wages conversion** | "That's three days of salary sitting there" | Converts abstract R into emotional possession; locks moonshot attachment |
+| **Tight-SL size maximization** | "I see the exact bottom, SL can be tight" | Escalation wearing risk-management clothes. Fees eat 12%+ of each R |
+| **Edge identity shield** | "I'm skilled, I just need discipline" | Untested hypothesis protecting a sunk-cost identity. The prediction journal exists to test it with data, not belief |
+| **Decision fatigue roulette** | "I'll just take a quick position" | Analysis exhausted. Trading has become random betting |
+
+Your traps will be different. The framework for finding and naming them is the same.
+
+---
+
+## Edge Verification
+
+The most dangerous belief in trading is "I have edge but lack discipline."
+
+If the edge is real, discipline is the whole game. If the edge is illusory, discipline is irrelevant — you're optimizing the execution of a losing strategy.
+
+MOST includes a **prediction journal** — log chart calls with timestamps BEFORE the move. No position required. No risk. After 30+ logged predictions, the data answers whether your analytical skill is real or whether it's selective memory dressed as competence.
+
+This is the single most important question you can answer with data instead of belief. Most traders never ask it because the answer might end the story they're telling themselves.
 
 ---
 
 ## Psychological Toolkit
 
-Not generic advice. Research-backed interventions deployed at trigger moments:
+Not affirmations. Not "don't be emotional." Research-backed behavioral interventions deployed at specific trigger moments:
 
-| Tool | What it does | When it fires |
-|------|-------------|--------------|
-| **Pre-mortem** (Klein, 2007) | "Describe the scenario where this trade leads to you breaking rules" | Before every plan lock |
-| **AVE firewall** (Marlatt & Gordon, 1985) | Contains first violation before it cascades | Between rule break #1 and #2 |
-| **Implementation intentions** (Gollwitzer, 1999) | Pre-committed if-then responses to triggers | When trigger pattern matches |
-| **Urge surfing** (Marlatt, 1985) | 15-minute structured observation of the urge wave | When activation language detected |
-| **Cognitive defusion** (Hayes, 2004) | Separates you from the rationalization | When plan corruption language appears |
-| **Affect labeling** (Lieberman, 2007) | One-word emotion naming reduces amygdala ~30% | When user is clearly activated |
-| **Behavioral chain analysis** (Linehan, 1993) | Maps full vulnerability-to-consequence sequence | After every rule violation |
-| **Decision fatigue budget** (Baumeister, 1998) | Counts decisions per session, flags degradation | At 5 and 8 decisions |
-
----
-
-## Edge Verification (Anti-Narrative Protocol)
-
-The belief "I'm skilled but undisciplined" is the foundation of the gambling loop. If the skill is real, the problem is solvable. If it's illusory, the loop is eternal.
-
-MOST includes a **prediction journal** (`journal/calls/`) — log chart predictions with timestamps BEFORE the move. No position required. After 30+ calls, the data answers whether edge exists or whether it's selective memory. This is the single most important question a trader can answer with data instead of belief.
+| Intervention | Source | When it fires |
+|---|---|---|
+| **Pre-mortem** | Klein, 2007 | Before every plan lock — "describe how this trade leads to rule-breaking" |
+| **Abstinence Violation Effect firewall** | Marlatt & Gordon, 1985 | After first rule break — contains the cascade before it multiplies |
+| **Implementation intentions** | Gollwitzer, 1999 | Pre-committed if-then responses to known triggers |
+| **Urge surfing** | Marlatt, 1985 | When activation language detected — 15min structured observation |
+| **Cognitive defusion** | Hayes, 2004 | When rationalization patterns appear in speech |
+| **Behavioral chain analysis** | Linehan, 1993 | After every rule violation — full vulnerability-to-consequence map |
+| **Decision fatigue budget** | Baumeister, 1998 | Tracks decisions per session; flags degradation at 5 and 8 |
 
 ---
 
-## Seven Rules (template — customize)
+## XP + Progression
 
-1. **Pre-trade pause** — open workspace, state thesis, hear response
-2. **Max risk per trade** — fixed %, absolute number, no "roughly"
-3. **Plan before entry** — entry, SL, TP, size, thesis + pre-mortem + fee drag check
-4. **No SL widening** — toward entry or stays. No exceptions.
-5. **Cooldown after loss** — minimum time gaps, enforced from exchange timestamps
-6. **Single position** (calibration phase) — one at a time until discipline is proven
-7. **System accountability** — measured by losses prevented, not trades generated
+Discipline is boring. The system must feel like something or it gets abandoned.
+
+Every compliant trade, every resisted urge, every pre-mortem completed, every prediction logged earns XP. Every violation costs XP. Visible in every response, not buried in a config file.
+
+The progression isn't cosmetic — it gates real operational freedom. Start with one position, fixed size, full handholding. Earn your way to partial takes, runners, Kelly sizing. Prove discipline with data, not promises.
 
 ---
 
-## Who It's For
+## Who This Is For
 
-- You already know how markets work — execution and psychology are the hard part
-- You've tried discipline before and it worked... until it didn't
-- You suspect the problem is deeper than "just follow the rules" but you don't know what it is
-- You want **memory + structure + investigation** without another app
-- You use **Cursor** and want one workspace that is your trading command center
+- You've been trading for years and your net P&L is negative despite "knowing what you're doing"
+- You've tried rules, journals, accountability — all of it worked for a week
+- You suspect the problem is deeper than discipline but you've never had a framework to investigate it
+- You're technical enough to work in an IDE and you'd rather `git clone` than sign up for another SaaS
+- You're honest enough to let a system track your actual behavior, not the behavior you wish you had
+
+## Who This Is NOT For
+
+- Beginners looking for trading education
+- People who want signals, bots, or automated trading
+- Anyone looking for permission to trade ("the AI confirmed my thesis" will never happen here)
 
 ---
 
@@ -107,77 +177,67 @@ cd most-vibe-trading-public
 
 pip install -r exchange/requirements.txt
 cp vault/bitget-api.env.example vault/bitget-api.env
-# Edit vault/bitget-api.env with your exchange API keys (read-only OK for sync)
+# Add your exchange API keys (read-only is fine for sync)
 
 python exchange/sync.py
 ```
 
-Open the folder in **Cursor**. The `.cursor/rules/trading-partner.mdc` tells the AI how MOST works — sync on session start, screenshot archiving, plan verification, pattern detection, psychological interventions.
+Open in [Cursor](https://cursor.com). The `.cursor/rules/trading-partner.mdc` is the AI's operating manual — loaded automatically. First conversation, it syncs your exchange, reads your state, and starts working.
 
-Optional — progression system:
-
-```bash
-python tools/progression.py
-```
-
-See [`SETUP.md`](SETUP.md) for full setup and exchange configuration.
+See [`SETUP.md`](SETUP.md) for full configuration.
 
 ---
 
 ## Layout
 
 ```
-.cursor/rules/trading-partner.mdc   <- AI operating manual (loaded automatically)
-context.md                          <- rolling state — AI reads first every session
-rules.md                            <- your rules (template — customize)
-profile.md                          <- behavioral patterns (builds over time)
+.cursor/rules/trading-partner.mdc   <- AI operating manual (auto-loaded by Cursor)
+context.md                          <- current state — AI reads first, every session
+rules.md                            <- your rules (template — customize to your life)
+profile.md                          <- your patterns (accumulates over time)
 synthesis/
-  mechanism-map.md                  <- YOUR psychological mechanism map (built with AI)
+  mechanism-map.md                  <- your psychological mechanism map
 playbook/
-  modus-operandi.md                 <- YOUR personalized trading method (built from synthesis)
+  modus-operandi.md                 <- your personalized trading method
 system/
   flow.md                           <- deterministic processing pipeline
   edge_verification.md              <- prediction journal protocol
   progression.md                    <- XP system design
-  progression_state.json            <- current XP/level
 exchange/
-  sync.py                           <- exchange -> JSON + snapshot.md
-  README.md                         <- how to connect your exchange
+  sync.py                           <- exchange data -> workspace
 journal/
   positions/                        <- trade plans + outcomes
   chapters/                         <- live trajectory + postmortems
   calls/                            <- prediction journal (edge verification)
   investigations/                   <- psychological mechanism-finding
-  reflections/                      <- ideas, analysis, implementation intentions
-  mood/                             <- energy / headspace (AI logs implicitly)
+  mood/                             <- state tracking (AI logs from conversation)
   patterns/                         <- behavioral patterns + chain analyses
-  speech/                           <- language pattern analysis
   charts/                           <- TradingView screenshots (archived)
 tools/
-  monte_carlo.py                    <- 5K path simulation
-  projection.py                     <- deterministic compound growth
+  monte_carlo.py                    <- 5,000-path probability simulation
+  projection.py                     <- deterministic compound growth model
   progression.py                    <- XP calculator
-vault/                              <- API keys (gitignored)
 ```
 
 ---
 
-## Exchanges — Not Locked to Bitget
+## Not Locked to Bitget
 
-Ships with **Bitget** futures. Everything runs through **[ccxt](https://github.com/ccxt/ccxt)** — Binance, Bybit, OKX, and 100+ other exchanges are adapter-level work. See [`exchange/README.md`](exchange/README.md).
+Ships with Bitget futures. Runs on [ccxt](https://github.com/ccxt/ccxt) — Binance, Bybit, OKX, and 100+ exchanges are adapter-level work. See [`exchange/README.md`](exchange/README.md).
 
 ---
 
 ## Philosophy
 
-MOST is built on one observation: **the gap between knowing and doing is not a discipline problem. It is a regulation problem.** The market provides something — stimulation, identity, escape, power — that ordinary life currently does not. Until you understand what that something is, rules will keep failing.
+The gap between knowing and doing is not a willpower gap. It is a **regulation gap**.
 
-The system works in three stages:
-1. **Investigate** — find the mechanism (what the market is actually doing for you)
-2. **Engineer** — build a personalized operating manual that accounts for YOUR specific failure modes
-3. **Verify** — prove edge exists with data, not belief; earn freedom with compliance, not promises
+The market is the fastest universal source of felt aliveness. Seen a balance? Power. Green numbers ticking? Ecstasy. Getting stopped? Pain so sharp it proves you exist. For someone whose baseline state is flat — bored, under-stimulated, identity-wounded, alone — the market is not a financial instrument. It is a nervous system regulator.
 
-The vibe: your future self and your AI partner are looking at the same facts. Not the story you half-remember at 1 AM.
+Rules fail because they were written by the calm version of you for the activated version of you, and the activated version has administrative access to override everything. The only thing that survives activation is **pre-committed structure** — decisions made before the trigger, engineering that doesn't require willpower in the moment.
+
+MOST is that engineering. Investigate the mechanism. Name the traps. Pre-commit every decision. Verify execution mechanically. Earn freedom with data.
+
+Your future self and your AI partner looking at the same facts. Not the story you half-remember at 1 AM with your finger on the buy button.
 
 ---
 
