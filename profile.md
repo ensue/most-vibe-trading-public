@@ -65,6 +65,14 @@ _AI tracks what approaches don't work for this user:_
 
 ---
 
+## Active Investigation Pointer
+
+- **Current sphere** — `journal/investigations/`
+- **Question** — What internal state or mechanism is actually driving the destructive behavior?
+- **Rule for promotion** — new findings stay in `journal/investigations/` until they recur enough to count as operational truth
+
+---
+
 ## Beliefs Under Review
 
 _Tracked beliefs about trading ability. AI updates evidence columns from workspace data. A belief is not a fact until evidence supports it._

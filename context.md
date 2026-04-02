@@ -34,6 +34,25 @@ Last updated: ___
 
 None — fresh start.
 
+## Key References
+
+| Document | Path |
+|----------|------|
+| Rules | `rules.md` |
+| Psychological synthesis | `synthesis/mechanism-map.md` |
+| Personalized playbook | `playbook/modus-operandi.md` |
+| Edge verification | `system/edge_verification.md` |
+| Progression | `system/progression.md` |
+| Pattern library | `journal/patterns/_summary.md` + `profile.md` |
+
+## Investigation Pointers
+
+- Active mechanism-finding work lives in `journal/investigations/`
+- Synthesis lands in `synthesis/mechanism-map.md`
+- Operational conclusions land in `playbook/modus-operandi.md`
+- Promote durable personality-level findings to `profile.md`
+- Keep `context.md` as a pointer layer, not the place for raw notes
+
 ## Recent Activity
 
 System initialized. No trading activity yet.
@@ -55,6 +74,7 @@ _Run the tools after setting your parameters in `rules.md` to see projections._
 
 - Read `profile.md` when warning signs appear
 - Read sphere summaries in `journal/*/` for deeper context
+- Use `journal/investigations/` when the harmful behavior needs mechanism-level understanding, not just rule enforcement
 - Read `exchange/data/` for latest exchange state
 - First 50 trades: fixed % risk — do NOT skip to Kelly early
 - Watch for: escalation, serial entries after losses, moonshot attachment

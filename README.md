@@ -1,28 +1,60 @@
-# MOST — Vibe Trading
+# MOST — Mental Operating System for Trading
 
-**Mental Operating System for Trading** — an AI accountability partner that lives in your IDE.
+An AI accountability partner that lives in your IDE. Not a trading bot. Not a signal service. Not a journal app.
 
-You trade with your charts, your exchange, your edge. MOST is the layer between your analysis and your execution — it **syncs live from the exchange**, **archives your charts**, **tracks your patterns over time**, and deploys **research-backed psychological tools** at the exact moment your brain tries to override your plan.
+MOST is the layer between your analysis and your execution — it **syncs live from the exchange**, **maps your psychological patterns**, **builds a personalized operating manual around your specific brain**, and deploys interventions at the exact moment your plan starts to corrupt.
 
-> **Vibe Trading** = data first, opinions when you ask, accountability always.
-
----
-
-## The Problem This Solves
-
-You know how to trade. You've proven it in simulation, in analysis, in hindsight. The failure is never the thesis — it's what happens between the thesis and the execution, and especially what happens in the 5 minutes after a stop-out.
-
-MOST doesn't try to make you a better analyst. It's built for the gap between knowing and doing.
+> **The insight:** Most traders don't fail because of bad analysis. They fail because the market is being used to regulate an internal state — boredom, emptiness, identity wound, stimulation deficit. As long as that's true, any real edge gets hijacked. MOST makes the regulation visible so the edge can operate cleanly.
 
 ---
 
-## What MOST Does
+## What Makes This Different From Everything Else
 
-**Live exchange state** — Every new chat runs `sync.py` (Bitget default, any [ccxt](https://github.com/ccxt/ccxt)-supported exchange is a small fork). Balances, open positions, recent trades land in `exchange/data/`. No manual input to start a session.
+| What you've tried | What MOST does differently |
+|---|---|
+| "I need more discipline" | Maps **why** discipline fails — the specific psychological mechanism, not the symptom |
+| Generic trading journal | AI writes it from conversation. Structured. Positions, mood, patterns, charts — no essays |
+| Risk management rules | Rules + **verification loop**: plan → execute → sync → AI compares → PASS/MISMATCH |
+| Post-mortem after blowup | **Live trajectory prediction** — danger flagged before it arrives |
+| "Don't be emotional" | Research-backed psychological interventions at exact trigger moments |
+| Willpower | Engineering: friction, pre-commitment, decision surface minimization |
+| One-size-fits-all method | **Personalized modus operandi** built from investigation of YOUR specific patterns |
 
-**Structured plan-and-verify loop** — State your plan (entry, SL, TP, size, thesis). Lock it. Execute on the exchange. Sync. The AI compares what's on the exchange to what you agreed — PASS or MISMATCH. Not approval — verification.
+---
 
-**Psychological toolkit** — Not generic advice. Research-backed behavioral interventions deployed at trigger moments:
+## The Three Layers
+
+### Layer 1: Exchange Sync + Verification
+
+Every session starts with `sync.py` — live balances, positions, recent trades from your exchange (Bitget default, any [ccxt](https://github.com/ccxt/ccxt)-supported exchange). The AI compares what's on the exchange to what you agreed. Not opinion — facts.
+
+### Layer 2: Psychological Investigation
+
+MOST doesn't assume it knows your problem. It runs a structured investigation:
+
+- **What does the market give you in the first 30 seconds?** (power? stimulation? escape?)
+- **What state appears before the urge?** (boredom? emptiness? status injury?)
+- **What is the full sequence from opening the exchange to blowing up?**
+- **What real sources of aliveness exist outside the market?**
+
+Findings accumulate in `synthesis/mechanism-map.md`. When they recur enough to be operational truth, they promote to `profile.md`. This is not therapy — it is mechanism-finding. The same approach that works for debugging code, applied to debugging behavior.
+
+### Layer 3: Personalized Playbook
+
+From the investigation, MOST builds `playbook/modus-operandi.md` — a trading operating manual designed around YOUR psychology:
+
+- **Trade structure** chosen to match your decision-fatigue tolerance (not a generic "use partials")
+- **Named traps** with recognition cards (your patterns, your trigger signs, your countermeasures)
+- **Zero-decision position management** — everything pre-committed, nothing left to real-time judgment
+- **Post-trade protocols** that specifically address YOUR post-trade failure modes
+- **Between-trades menu** — what to do when flat and restless that isn't gambling
+- **Progression path** — how to earn more freedom over time with compliance data
+
+---
+
+## Psychological Toolkit
+
+Not generic advice. Research-backed interventions deployed at trigger moments:
 
 | Tool | What it does | When it fires |
 |------|-------------|--------------|
@@ -35,25 +67,21 @@ MOST doesn't try to make you a better analyst. It's built for the gap between kn
 | **Behavioral chain analysis** (Linehan, 1993) | Maps full vulnerability-to-consequence sequence | After every rule violation |
 | **Decision fatigue budget** (Baumeister, 1998) | Counts decisions per session, flags degradation | At 5 and 8 decisions |
 
-**Chapter narratives** — Live trajectory analysis that predicts danger before it arrives, not post-mortems after the damage. The AI opens with where you're heading, not "how are you feeling?"
+---
 
-**Pattern memory** — Your `profile.md` accumulates behavioral patterns over time. The AI remembers what you forget — not market patterns, but *your* patterns.
+## Edge Verification (Anti-Narrative Protocol)
 
-**XP progression** — Gamified discipline tracking. Every compliant trade, every verification, every resisted urge earns XP. Every violation costs. Visible in every response, not buried in a file.
+The belief "I'm skilled but undisciplined" is the foundation of the gambling loop. If the skill is real, the problem is solvable. If it's illusory, the loop is eternal.
 
-**R:R unlock ladder** — Optional cap on planned max reward:risk (start at 1:1, unlock up to 20:1 with compliant wins). See `system/risk_reward_unlock.md` and `tools/risk_reward_unlock.py`.
-
-**Journal without the cringe** — Positions, mood, reflections, patterns. Structured markdown, not essays. The AI writes it for you from the conversation.
-
-**Growth math** — Monte Carlo (5,000 paths) + deterministic projection. Context for variance and goals, not a lecture.
+MOST includes a **prediction journal** (`journal/calls/`) — log chart predictions with timestamps BEFORE the move. No position required. After 30+ calls, the data answers whether edge exists or whether it's selective memory. This is the single most important question a trader can answer with data instead of belief.
 
 ---
 
-## Seven Rules (template — you customize)
+## Seven Rules (template — customize)
 
 1. **Pre-trade pause** — open workspace, state thesis, hear response
 2. **Max risk per trade** — fixed %, absolute number, no "roughly"
-3. **Plan before entry** — entry, SL, TP, size, thesis + pre-mortem + liq check
+3. **Plan before entry** — entry, SL, TP, size, thesis + pre-mortem + fee drag check
 4. **No SL widening** — toward entry or stays. No exceptions.
 5. **Cooldown after loss** — minimum time gaps, enforced from exchange timestamps
 6. **Single position** (calibration phase) — one at a time until discipline is proven
@@ -61,26 +89,13 @@ MOST doesn't try to make you a better analyst. It's built for the gap between kn
 
 ---
 
-## What Makes This Different
-
-| Other tools | MOST |
-|-------------|------|
-| Manual position entry | Live sync from exchange |
-| Generic risk warnings | Your own patterns, reflected back with your own history |
-| "Don't be emotional" | Research-backed intervention at the exact trigger moment |
-| Post-mortem only | Live trajectory prediction + post-mortem |
-| Rules as text | Rules enforced through structured verification loop |
-| Journal as chore | Journal written for you from conversation |
-| Willpower-based | Engineering-based (friction, commitment devices, pre-commitment) |
-
----
-
 ## Who It's For
 
-- You already know how markets work — execution and headspace are the hard part
+- You already know how markets work — execution and psychology are the hard part
 - You've tried discipline before and it worked... until it didn't
-- You want **memory + structure** without another app that nags you
-- You use **Cursor** and want one workspace that feels like your command deck
+- You suspect the problem is deeper than "just follow the rules" but you don't know what it is
+- You want **memory + structure + investigation** without another app
+- You use **Cursor** and want one workspace that is your trading command center
 
 ---
 
@@ -112,12 +127,17 @@ See [`SETUP.md`](SETUP.md) for full setup and exchange configuration.
 ## Layout
 
 ```
-.cursor/rules/trading-partner.mdc   <- AI operating manual (Cursor loads automatically)
+.cursor/rules/trading-partner.mdc   <- AI operating manual (loaded automatically)
 context.md                          <- rolling state — AI reads first every session
 rules.md                            <- your rules (template — customize)
 profile.md                          <- behavioral patterns (builds over time)
+synthesis/
+  mechanism-map.md                  <- YOUR psychological mechanism map (built with AI)
+playbook/
+  modus-operandi.md                 <- YOUR personalized trading method (built from synthesis)
 system/
   flow.md                           <- deterministic processing pipeline
+  edge_verification.md              <- prediction journal protocol
   progression.md                    <- XP system design
   progression_state.json            <- current XP/level
 exchange/
@@ -126,9 +146,12 @@ exchange/
 journal/
   positions/                        <- trade plans + outcomes
   chapters/                         <- live trajectory + postmortems
+  calls/                            <- prediction journal (edge verification)
+  investigations/                   <- psychological mechanism-finding
   reflections/                      <- ideas, analysis, implementation intentions
   mood/                             <- energy / headspace (AI logs implicitly)
   patterns/                         <- behavioral patterns + chain analyses
+  speech/                           <- language pattern analysis
   charts/                           <- TradingView screenshots (archived)
 tools/
   monte_carlo.py                    <- 5K path simulation
@@ -141,13 +164,18 @@ vault/                              <- API keys (gitignored)
 
 ## Exchanges — Not Locked to Bitget
 
-Ships with **Bitget** futures. Everything runs through **[ccxt](https://github.com/ccxt/ccxt)** — Binance, Bybit, OKX, and 100+ other exchanges are adapter-level work. See [`exchange/README.md`](exchange/README.md) for the swap checklist.
+Ships with **Bitget** futures. Everything runs through **[ccxt](https://github.com/ccxt/ccxt)** — Binance, Bybit, OKX, and 100+ other exchanges are adapter-level work. See [`exchange/README.md`](exchange/README.md).
 
 ---
 
 ## Philosophy
 
-MOST is not "AI that lets you trade." You trade. MOST is the accountability layer: it remembers your patterns when you forget them, deploys psychological tools when your brain is trying to override your plan, and makes the concrete cost of breaking rules viscerally clear — using your own numbers, your own history, your own words from when you were thinking clearly.
+MOST is built on one observation: **the gap between knowing and doing is not a discipline problem. It is a regulation problem.** The market provides something — stimulation, identity, escape, power — that ordinary life currently does not. Until you understand what that something is, rules will keep failing.
+
+The system works in three stages:
+1. **Investigate** — find the mechanism (what the market is actually doing for you)
+2. **Engineer** — build a personalized operating manual that accounts for YOUR specific failure modes
+3. **Verify** — prove edge exists with data, not belief; earn freedom with compliance, not promises
 
 The vibe: your future self and your AI partner are looking at the same facts. Not the story you half-remember at 1 AM.
 
