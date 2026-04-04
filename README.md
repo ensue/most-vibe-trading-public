@@ -40,9 +40,11 @@ Free. Open source. MIT licensed. Your data stays on your machine.
 
 ---
 
-## Why rules alone are not enough
+## Why Everything Else Failed
 
-Most traders already know the textbook: risk limits, plans, journals, position sizing. The hard part is not the checklist — it's **consistency under activation**.
+You've tried rules. You've tried journals. You've tried position size calculators and risk management frameworks and accountability groups and "just be disciplined."
+
+It worked — for a week. Then life happened, activation happened, and the stack quietly reverted to defaults.
 
 Here's why willpower-based systems break first:
 
@@ -155,11 +157,14 @@ The progression isn't cosmetic — it gates real operational freedom. Start with
 
 ## Who This Is For
 
+- You've tried rules, journals, accountability — **all of it worked for a week**
+- You suspect the problem is **deeper than discipline** but you've never had a framework to investigate it
 - Serious traders who want **execution quality** to match **analysis quality** — same person, same plan, same machine
 - People who prefer **engineering** over motivation: sync, verification, logs, reproducible process
+- You're technical enough to work in an IDE and you'd rather `git clone` than sign up for another SaaS
 - **Cursor** users who want a trading workspace that behaves like software: versioned rules, structured memory, automation
 - Anyone who wants **edge measured** (prediction journal) instead of assumed
-- Anyone willing to log real behavior — the only dataset that matters for improvement
+- You're honest enough to let a system track your **actual behavior**, not the behavior you wish you had
 
 ## Who This Is NOT For
 
