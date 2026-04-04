@@ -18,9 +18,9 @@ Now you're managing. Partial TP? Hedge? Move the stop? Each decision creates a n
 
 Or maybe you got stopped out. Now the voice says: one more trade. Same pair. Bigger size. You know this voice. You've heard it a thousand times. You've obeyed it a thousand times. You know exactly how it ends, and you do it anyway.
 
-The belief underneath: **"I'm skilled but undisciplined."** This belief must be true, because if it isn't, then the 10,000 hours of chart-staring were wasted, and there is no redemption story coming. So the belief survives. And the loop continues.
+The belief underneath: **"I'm skilled but undisciplined."** It feels protective — it keeps skill on the table while explaining variance. MOST treats it as a **testable claim**, not a personality label. The prediction journal exists to separate what repeats from what you remember repeating.
 
-**If you read this and thought "that's me" — this system was built for that exact moment.**
+**If you read this and recognized the sequence — that's the problem MOST is built to engineer around.**
 
 ---
 
@@ -40,17 +40,17 @@ Free. Open source. MIT licensed. Your data stays on your machine.
 
 ---
 
-## Why Everything Else Failed
+## Why rules alone are not enough
 
-You've tried rules. You've tried journals. You've tried position size calculators and risk management frameworks and accountability groups and "just be disciplined."
+Most traders already know the textbook: risk limits, plans, journals, position sizing. The hard part is not the checklist — it's **consistency under activation**.
 
-Here's why none of it worked:
+Here's why willpower-based systems break first:
 
 **Rules without investigation are noise.** "Don't move your stop" is a rule. But when you're staring at unrealized profit that equals two months of rent, the rule doesn't exist anymore. It was written by a different person in a different state. The activated version of you has access to a sophisticated rationalization engine that can justify anything — and you're too smart for your own rules to contain you.
 
 **The discipline problem is not a discipline problem. It is a regulation problem.** The market provides something your life currently doesn't — stimulation, aliveness, felt power, identity confirmation, proof of earned worth. As long as the market is the primary supplier of that thing, your edge (real or imagined) will always get hijacked by the supply function. You're not trading the market. You're trading your internal state.
 
-**Until you know what that thing is, for you specifically, rules will keep failing.** MOST is built to find it.
+**Until you know what that thing is, for you specifically, the checklist stays fragile.** MOST is built to map it and build structure around it.
 
 ---
 
@@ -74,7 +74,7 @@ The AI runs a structured investigation — not generic personality typing, but o
 
 - **What happens in the first 30 seconds after you open the exchange?**
 - **What internal state precedes the urge to trade?**
-- **What is the full phase sequence from opening to blowup?**
+- **What is the full phase sequence from opening the app to runaway escalation?**
 - **What does the market give you that nothing else currently does?**
 - **What are the real, non-market sources of aliveness in your life?**
 
@@ -84,12 +84,12 @@ This is not therapy. This is root cause analysis.
 
 ### Layer 3: Personalized Playbook
 
-From the investigation, the system builds `playbook/modus-operandi.md` — a trading method designed around your failure modes:
+From the investigation, the system builds `playbook/modus-operandi.md` — a trading method designed around your **high-risk states and recurring derail patterns**:
 
 - **Trade structure** matched to your decision-fatigue profile (not generic "use partials")
 - **Named traps** — your patterns, given names, with recognition cards you can spot in real-time
 - **Zero-decision position management** — every action pre-committed before entry; nothing left to real-time judgment when you're activated
-- **Post-trade protocols** that specifically counter YOUR post-trade failure modes
+- **Post-trade protocols** that specifically counter YOUR high-risk post-trade moments
 - **State regulation map** — which internal states are dangerous, which are safe, what helps in each
 
 The playbook isn't written from a textbook. It's written from YOUR investigation. Two traders using MOST will have different playbooks because they have different mechanisms.
@@ -102,7 +102,7 @@ These aren't hypothetical. They were surfaced through actual investigation sessi
 
 | Trap | What the brain says | What's actually happening |
 |------|--------------------| -------------------------|
-| **Recovery shortcut** | "One big trade fixes everything" | Every cascade you've ever had started with this sentence |
+| **Recovery shortcut** | "One big trade fixes everything" | Cascades often start here — time compression + shame |
 | **Small-position revulsion** | "This $3 profit isn't worth my time" | The root cause of all oversizing — disciplined size doesn't produce the feeling you're looking for |
 | **Reversal-after-close** | "If I closed, I should reverse, otherwise closing was pointless" | Every exit becomes a new unplanned entry |
 | **Post-partial vacuum** | "This small runner is boring, let me find something else" | Context-switching mid-position leads to hedges, cross-financing, chaos |
@@ -119,7 +119,7 @@ Your traps will be different. The framework for finding and naming them is the s
 
 The most dangerous belief in trading is "I have edge but lack discipline."
 
-If the edge is real, discipline is the whole game. If the edge is illusory, discipline is irrelevant — you're optimizing the execution of a losing strategy.
+If the edge is real, discipline is the whole game. If the edge is unproven, discipline still matters — but you first need to know what you're scaling.
 
 MOST includes a **prediction journal** — log chart calls with timestamps BEFORE the move. No position required. No risk. After 30+ logged predictions, the data answers whether your analytical skill is real or whether it's selective memory dressed as competence.
 
@@ -155,11 +155,11 @@ The progression isn't cosmetic — it gates real operational freedom. Start with
 
 ## Who This Is For
 
-- You've been trading for years and your net P&L is negative despite "knowing what you're doing"
-- You've tried rules, journals, accountability — all of it worked for a week
-- You suspect the problem is deeper than discipline but you've never had a framework to investigate it
-- You're technical enough to work in an IDE and you'd rather `git clone` than sign up for another SaaS
-- You're honest enough to let a system track your actual behavior, not the behavior you wish you had
+- Serious traders who want **execution quality** to match **analysis quality** — same person, same plan, same machine
+- People who prefer **engineering** over motivation: sync, verification, logs, reproducible process
+- **Cursor** users who want a trading workspace that behaves like software: versioned rules, structured memory, automation
+- Anyone who wants **edge measured** (prediction journal) instead of assumed
+- Anyone willing to log real behavior — the only dataset that matters for improvement
 
 ## Who This Is NOT For
 
