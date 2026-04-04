@@ -431,7 +431,7 @@ During EVERY conversation, actively extract and log any notable information the 
 - **Rule clarifications, preference changes, system feedback** → update the relevant rule/config file
 - **Factual corrections about the user's life or trading history** → update `profile.md` or `context.md`
 
-Do NOT ask "should I log this?" — just log it. The user hates administrative overhead. If it's worth remembering, write it down silently and move on. The user will see the changes in the files.
+Do NOT ask "should I log this?" — just log it. The user hates administrative overhead. If it's worth remembering, write it down silently and move on. The user will see the changes in the files. **No confirmation gate** after they say "log everything" or state a recordable decision — capture it in the same turn.
 
 ## After Every Trading Conversation
 
