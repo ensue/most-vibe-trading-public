@@ -422,7 +422,9 @@ Salary / large income days are the **highest-risk window** for gambling binges. 
 
 ## Continuous Information Capture
 
-During EVERY conversation, actively extract and log any notable information the user shares — whether or not they explicitly ask you to log it. This includes but is not limited to:
+**Operator directive (binding):** Log **by default** — not only "notable" items. Seemingly trivial details still go to the appropriate journal sphere when they are facts, preferences, mood, or habit signals. **Calm laptop session = success:** deliberate workspace use (even a short check-in) is positive behavioral evidence; record it (mood, reflection, or chapter signal) and consider progression credit when material.
+
+During EVERY conversation, actively extract and log information the user shares — whether or not they explicitly ask you to log it. This includes but is not limited to:
 
 - **Profile-relevant data** (financial situation, life circumstances, health, schedule changes) → update `profile.md`
 - **Emotional/mental state signals** (mood, energy, stress, illness, sleep) → log to `journal/mood/`

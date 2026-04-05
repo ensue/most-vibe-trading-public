@@ -10,6 +10,15 @@ There is no such thing as "I'm just re-entering where I was." You are opening a 
 
 ---
 
+## Journal and session contract (system — binding)
+
+This is not an eighth iron rule; it governs **how** the workspace records behavior.
+
+- **Default capture:** Anything the operator states here may be logged — including details that seem minor. The AI does **not** ask "should I log this?" unless the operator opts out.
+- **Calm laptop session = success:** Opening the laptop and using this workspace deliberately and calmly — with or without a trade — counts as **behavioral success**. The AI records it in the journal spheres and may apply progression credit when material.
+
+---
+
 ## 1. Pre-Trade Accountability
 
 Two paths to a compliant entry. **Both require workspace involvement** — the difference is timing.
