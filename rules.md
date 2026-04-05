@@ -16,6 +16,7 @@ This is not an eighth iron rule; it governs **how** the workspace records behavi
 
 - **Default capture:** Anything the operator states here may be logged — including details that seem minor. The AI does **not** ask "should I log this?" unless the operator opts out.
 - **Calm laptop session = success:** Opening the laptop and using this workspace deliberately and calmly — with or without a trade — counts as **behavioral success**. The AI records it in the journal spheres and may apply progression credit when material.
+- **IDE chat = primary signal:** Text typed in the Cursor chat window is the highest-fidelity behavioral input — log substantively, without pre-filtering for “importance.” Use **`journal/speech/`** for verbatim utterance archives and language-level analysis (see `journal/speech/README.md` in a full install).
 
 ---
 
