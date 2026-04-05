@@ -4,7 +4,7 @@
 
 The shipped `sync.py` is wired for **Bitget USDT-margined futures** (`defaultType: swap`). Credentials live in `vault/bitget-api.env` (workspace root in this layout).
 
-**Bulk leverage (optional):** `set_leverage_all.py` sets leverage on every **active USDT perpetual** via ccxt (`set_leverage` per symbol). Default is **30x** (`--leverage` overrides). Example: `python exchange/set_leverage_all.py` (use `--dry-run` first). Some symbols may cap below your target or fail if you have open positions/orders; Bitget returns errors per market. The script attaches the same aiohttp **ThreadedResolver** session as `sync.py` so Windows does not hit `aiodns` DNS failures.
+**Bulk leverage (optional):** `set_leverage_all.py` sets **isolated** margin (mix accounts) then **30x on long and short** per symbol (`holdSide` / UTA `posSide`). Default **30x** (`--leverage` overrides). Example: `python exchange/set_leverage_all.py` (`--dry-run` first). The API key needs **Futures / position write**; error **40014** means fix permissions in Bitget. Some symbols may cap below your target or fail with open positions/orders. Same aiohttp **ThreadedResolver** session as `sync.py` (Windows DNS).
 
 ## Other CEXes — intentionally simple
 
