@@ -4,7 +4,7 @@
 
 The shipped `sync.py` is wired for **Bitget USDT-margined futures** (`defaultType: swap`). Credentials live in `vault/bitget-api.env` (workspace root in this layout).
 
-**Bulk leverage (optional):** `set_leverage_all.py` sets leverage on every **active USDT perpetual** via ccxt (`set_leverage` per symbol). Example: `python exchange/set_leverage_all.py --leverage 50` (use `--dry-run` first). Some symbols may cap below 50x or fail if you have open positions/orders; Bitget returns errors per market.
+**Bulk leverage (optional):** `set_leverage_all.py` sets leverage on every **active USDT perpetual** via ccxt (`set_leverage` per symbol). Default is **30x** (`--leverage` overrides). Example: `python exchange/set_leverage_all.py` (use `--dry-run` first). Some symbols may cap below your target or fail if you have open positions/orders; Bitget returns errors per market.
 
 ## Other CEXes — intentionally simple
 

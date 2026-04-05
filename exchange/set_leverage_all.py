@@ -3,13 +3,13 @@ Set leverage on Bitget USDT-M perpetual (swap) markets.
 
 Uses the same vault credentials as `sync.py` (`vault/bitget-api.env`).
 Calls ccxt `set_leverage` per symbol. Bitget does not expose a single
-“all symbols” call in ccxt; some pairs may reject 50x (max tier) or fail if
+“all symbols” call in ccxt; some pairs may reject the target leverage (max tier) or fail if
 you have open positions/orders on that symbol.
 
 Usage:
-    python exchange/set_leverage_all.py --leverage 50
-    python exchange/set_leverage_all.py --leverage 50 --dry-run
-    python exchange/set_leverage_all.py --leverage 50 --symbol NEAR/USDT:USDT
+    python exchange/set_leverage_all.py
+    python exchange/set_leverage_all.py --dry-run
+    python exchange/set_leverage_all.py --leverage 25 --symbol NEAR/USDT:USDT
 """
 
 from __future__ import annotations
@@ -139,7 +139,7 @@ async def run(args: argparse.Namespace) -> int:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Set leverage on all Bitget USDT perpetuals")
-    p.add_argument("--leverage", type=int, default=50, help="Leverage (default: 50)")
+    p.add_argument("--leverage", type=int, default=30, help="Leverage (default: 30)")
     p.add_argument("--dry-run", action="store_true", help="List symbols only, no API writes")
     p.add_argument("--symbol", type=str, default=None, help="Single symbol, e.g. NEAR/USDT:USDT")
     args = p.parse_args()
