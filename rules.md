@@ -246,6 +246,7 @@ When you paste a **screenshot**, the AI must **in the same reply** state explici
 
 - **Direction:** long, short, or not stated  
 - **Price levels** it is using: entry, SL, TP(s), or zones — or **not readable**  
-- **Source:** your words (**confirmed**) vs **inferred from the image** (may be wrong)
+- **Source:** your words (**confirmed**) vs **inferred from the image** (may be wrong)  
+- **TradingView (binding for AI):** If the screenshot shows **EP / SL / TP price labels on the right-hand price axis**, the AI must use those numbers — **not** “eyeball” levels from candles or grid. If labels are not legible, say **not readable** and ask; do not guess.
 
 Screenshot interpretation errors happen; the **locked trade plan** and journal must follow **what you confirm**, not a misread chart.
