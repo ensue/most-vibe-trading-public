@@ -548,12 +548,6 @@ Shows the RANGE of outcomes: probability of reaching goal, drawdown distribution
 
 After 50 real trades: feed actual win rate and avg R to both tools.
 
-## X posting — human approval gate (mandatory)
-
-- **No tweet or official X action without explicit human consent.** Do not run `most/tools/post_to_x.py`, `retweet_x.py`, or any script that publishes to X unless the user has **reviewed the exact final copy** (verbatim body, or exact tweet id for retweets) and **approved** sending it in the same conversation (e.g. pasted final text, or clear “post this” with that text).
-- The AI may **draft**, **revise**, or **output a shell command** for the user to run — it does **not** auto-post marketing or narrative content.
-- **No exception** for “smoke tests” or “first post” unless the user supplied the literal string to post. If in doubt: stop and ask.
-
 ## Git — Auto-commit and Push
 
 Commit and push to your repository **frequently and automatically** — do not wait for the user to ask.
