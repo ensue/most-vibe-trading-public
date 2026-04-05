@@ -2,6 +2,9 @@
 Set leverage on Bitget USDT-M perpetual (swap) markets.
 
 Uses the same vault credentials as `sync.py` (`vault/bitget-api.env`).
+Uses the same aiohttp **ThreadedResolver** session wiring as `sync.py` so Windows
+does not fail with `aiodns` / “Could not contact DNS servers”.
+
 Calls ccxt `set_leverage` per symbol. Bitget does not expose a single
 “all symbols” call in ccxt; some pairs may reject the target leverage (max tier) or fail if
 you have open positions/orders on that symbol.
@@ -20,6 +23,8 @@ import sys
 from pathlib import Path
 
 import ccxt.async_support as ccxt
+from aiohttp import ClientSession, TCPConnector
+from aiohttp.resolver import ThreadedResolver
 from dotenv import dotenv_values
 
 VAULT_CANDIDATES = [
@@ -104,6 +109,10 @@ async def set_one(
 async def run(args: argparse.Namespace) -> int:
     creds = load_credentials()
     exchange = create_exchange(creds)
+    resolver = ThreadedResolver()
+    connector = TCPConnector(resolver=resolver)
+    session = ClientSession(connector=connector)
+    exchange.session = session
     try:
         await exchange.load_markets()
         symbols = usdt_swap_symbols(exchange.markets)
