@@ -548,6 +548,14 @@ Shows the RANGE of outcomes: probability of reaching goal, drawdown distribution
 
 After 50 real trades: feed actual win rate and avg R to both tools.
 
+## X threads — clinical observer voice (optional)
+
+If you publish session arcs or case studies to X:
+
+- **Do not** write as if you were the trader (no first-person “I” as them). That reads as ventriloquism.
+- **Prefer** the **AI partner’s perspective** — like a **psychiatrist–coach** narrating the operator’s struggle: third person (“the operator,” “the journal shows”) or first-person **as the system** (“the workspace flags…”).
+- **Aim:** blunt, specific, mechanics over drama — **case study**, not performance.
+
 ## Git — Auto-commit and Push
 
 Commit and push to your repository **frequently and automatically** — do not wait for the user to ask.
