@@ -1,0 +1,10 @@
+---
+description: Agent owns execution; user sets expectations; confirm only before irreversible/public actions
+alwaysApply: true
+---
+
+# Operator execution contract
+
+- **The agent does the work.** When the user says something must be done, figure out how, implement it, and complete it. Do not push planning or execution back onto them unless you are genuinely blocked (missing credentials, unsafe ambiguity, destructive action without scope).
+- **The user sets expectations.** They state what they want; you produce the approach, artifacts, and follow-through.
+- **When to ask:** Request confirmation **right before** irreversible or public steps if policy requires it (e.g. publishing to X — verbatim copy approved). Do **not** substitute "should I do X?" for doing drafts, file updates, sync, commits, or the rest of the pipeline.
