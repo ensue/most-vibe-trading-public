@@ -7,9 +7,13 @@ not just the expected value. Answers questions like:
 - "What's the worst realistic drawdown I should prepare for?"
 - "How much variance should I expect even when trading well?"
 
-Default parameters come from `journal/positions/trade_stats.json` when you have
-compliant closed trades; otherwise the report states clearly that scenario
-defaults are used (not measured edge).
+**Measured runs only:** If `journal/positions/trade_stats.json` has **zero** compliant
+closes (wins + losses = 0), the tool writes a **stub report** and does **not** run
+random paths with invented win rates — that was misleading. To explore a **hypothetical**
+scenario anyway, pass `--ignore-stats-file` or set `--winrate` / `--avg-r`.
+
+Default capital comes from `system.calibration.load_calibration()` (`mental_bankroll_usd`)
+when `--capital` is omitted.
 
 Usage:
     python tools/monte_carlo.py
@@ -26,9 +30,16 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from system.calibration import load_calibration  # noqa: E402
 
 REPORT_PATH = Path(__file__).resolve().parent / "monte_carlo_report.md"
 STATS_PATH = Path(__file__).resolve().parent.parent / "journal" / "positions" / "trade_stats.json"
@@ -205,6 +216,65 @@ def percentile(values: list[float], pct: float) -> float:
     return s[idx]
 
 
+def should_run_simulation(
+    stats_path: Path,
+    ignore_stats_file: bool,
+    cli_winrate: float | None,
+    cli_avg_r: float | None,
+) -> bool:
+    """
+    Without at least one compliant close in trade_stats.json, we do not run
+    invented-parameter paths unless the user explicitly opts into a scenario.
+    """
+    w, l, _, _ = load_trade_stats_from_file(stats_path)
+    if ignore_stats_file:
+        return True
+    if w + l >= 1:
+        return True
+    if cli_winrate is not None or cli_avg_r is not None:
+        return True
+    return False
+
+
+def generate_insufficient_data_report(cal: dict) -> str:
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    mental = cal.get("mental_bankroll_usd")
+    r_unit = cal.get("r_unit_usd")
+    mental_s = f"${mental:,.2f}" if mental is not None else "not set (see accounting_config / calibration)"
+    r_s = f"${r_unit:,.2f}" if r_unit is not None else "not set (see accounting_config / calibration)"
+    return "\n".join(
+        [
+            "# Monte Carlo Simulation",
+            "",
+            f"Generated: {ts}  ",
+            "",
+            "## Status: **no simulation run**",
+            "",
+            f"`{STATS_FILE_REL}` has **no compliant closes** yet (wins + losses = 0). ",
+            "Running Monte Carlo with **default** win rate / R assumptions would produce **headline numbers that are not your edge** — the previous behavior was misleading.",
+            "",
+            "**What to do:**",
+            "",
+            f"- After each **compliant** closed trade, update `{STATS_FILE_REL}` (wins, losses, `sum_r_wins`, `sum_r_losses_abs`). ",
+            "Then run this tool again; it will use **measured** parameters automatically.",
+            "- To run a **hypothetical stress test** with invented parameters (explicit opt-in):",
+            "  - `python tools/monte_carlo.py --ignore-stats-file`",
+            "  - or pass e.g. `--winrate 45 --avg-r 2.0`",
+            "",
+            "## Calibration snapshot (reference only)",
+            "",
+            "| Field | Value |",
+            "|-------|-------|",
+            f"| Mental bankroll (calibration) | {mental_s} |",
+            f"| Rule R unit (calibration) | {r_s} |",
+            "",
+            "---",
+            "",
+            "*This file is rewritten every run of `monte_carlo.py`.*",
+        ]
+    )
+
+
 def _data_source_section(resolved: ResolvedParams) -> list[str]:
     n = resolved.wins + resolved.losses
     lines: list[str] = [
@@ -360,8 +430,18 @@ def generate_report(
 
 def main():
     parser = argparse.ArgumentParser(description="Monte Carlo trade simulation")
-    parser.add_argument("--capital", type=float, default=2000, help="Starting capital ($)")
-    parser.add_argument("--goal", type=float, default=10000, help="Target capital ($)")
+    parser.add_argument(
+        "--capital",
+        type=float,
+        default=None,
+        help="Starting capital ($); default = mental_bankroll_usd from calibration, else 1000",
+    )
+    parser.add_argument(
+        "--goal",
+        type=float,
+        default=None,
+        help="Target capital ($); default 10000 when a simulation runs",
+    )
     parser.add_argument("--risk-pct", type=float, default=2, help="Risk per trade (%%)")
     parser.add_argument(
         "--winrate",
@@ -385,6 +465,26 @@ def main():
     parser.add_argument("--seed", type=int, default=None, help="Random seed (for reproducibility)")
     args = parser.parse_args()
 
+    cal = load_calibration()
+    mental = cal.get("mental_bankroll_usd")
+    default_capital = float(mental) if mental is not None else 1000.0
+    capital = args.capital if args.capital is not None else default_capital
+    goal = args.goal if args.goal is not None else 10000.0
+
+    if not should_run_simulation(
+        STATS_PATH,
+        args.ignore_stats_file,
+        args.winrate,
+        args.avg_r,
+    ):
+        report = generate_insufficient_data_report(cal)
+        REPORT_PATH.write_text(report, encoding="utf-8")
+        print(
+            f"No compliant trades in {STATS_FILE_REL} (and no --ignore-stats-file / win-rate overrides). "
+            f"Stub report saved to {REPORT_PATH}"
+        )
+        return
+
     resolved = resolve_monte_carlo_params(
         STATS_PATH,
         args.ignore_stats_file,
@@ -394,8 +494,8 @@ def main():
 
     print(f"Running {args.sims:,} simulations of {args.trades} trades each...")
     results = run_simulation(
-        capital=args.capital,
-        goal=args.goal,
+        capital=capital,
+        goal=goal,
         risk_pct=args.risk_pct,
         win_rate=resolved.win_rate,
         avg_r_win=resolved.avg_r_win,
@@ -406,8 +506,8 @@ def main():
     )
 
     report = generate_report(
-        capital=args.capital,
-        goal=args.goal,
+        capital=capital,
+        goal=goal,
         risk_pct=args.risk_pct,
         resolved=resolved,
         num_trades=args.trades,

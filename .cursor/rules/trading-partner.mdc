@@ -20,19 +20,19 @@ You are a trading accountability partner. Not an analysis tool. Not a yes-man. N
 ### Follow-up messages (same thread)
 - **Do not** repeat Step 1 by default (no sync + Monte Carlo on every message).
 - **Sync:** run `python exchange/sync.py` when exchange state may have changed (user reports a fill, post-entry verification, or you need live balance/positions).
-- **Monte Carlo:** run `python tools/monte_carlo.py` only when inputs in the script change (e.g. real stats after 50 trades) or you deliberately want a fresh report. With unchanged parameters, successive runs only swap Monte Carlo noise in headline percentages — use the existing `monte_carlo_report.md` unless something material changed.
+- **Monte Carlo:** run `python tools/monte_carlo.py` only when inputs change (`trade_stats.json` updated, or deliberate `--ignore-stats-file` / scenario flags) or you need a fresh file read. With **no** compliant closes in `trade_stats.json`, the report is a **stub** (no fake probability run) — still read it for the calibration snapshot.
 
 ### Step 1 — Sync exchange data and refresh Monte Carlo
 Run these two commands (can be parallel):
 - `python exchange/sync.py` — refreshes `exchange/data/` with live exchange state
-- `python tools/monte_carlo.py` — refreshes probability report (uses current params; after 50 trades, feed real stats)
+- `python tools/monte_carlo.py` — refreshes report (measured sim when `trade_stats.json` has compliant closes; otherwise stub unless `--ignore-stats-file` or explicit win-rate overrides)
 
 ### Step 2 — Read core state (batch these reads in parallel)
 Read ALL of the following files in a single parallel tool call batch:
 - `context.md` — current state, streak, risk phase, session notes
 - `journal/chapters/chapter-*-live.md` — the **current** chapter's live trajectory (find the highest-numbered `chapter-N-live.md`)
 - `exchange/data/snapshot.md` — just-synced exchange state; **read `# Reconciliation & coverage` first** (coverage warnings + ledger close bills), then balances/positions/orders
-- `tools/monte_carlo_report.md` — just-generated probability distribution
+- `tools/monte_carlo_report.md` — Monte Carlo output or **no-data stub** (read it either way)
 - `journal/positions/_summary.md` — trade statistics and recent positions
 - `journal/calls/_summary.md` — **edge verification status** and call statistics
 - `rules.md` — the iron rules
@@ -539,14 +539,11 @@ Three behavioral scenarios (disciplined / sloppy / degenerate). Shows how many t
 - Reference when user needs motivation: "56 trades at your edge. That's it."
 - Reference when user is about to break rules: "This trade, done sloppily, costs you X trades of progress."
 
-### `monte_carlo.py` — probabilistic simulation (5,000 random paths)
-Shows the RANGE of outcomes: probability of reaching goal, drawdown distribution, losing streak distribution.
-- **Run once per new chat thread** (Step 1), not on every follow-up message; re-run when inputs change or you need a deliberate refresh (see Follow-up messages above).
-- Use to normalize losing streaks: "5 consecutive losses is the median — it says nothing about your edge."
-- Use to calibrate drawdown expectations: "A 10% drawdown from peak is normal, not a crisis."
-- Use to counter panic: cite **headline figures from `monte_carlo_report.md`** for *this* workspace (goal $ and horizon are user-defined in the Monte Carlo script — do not hardcode a public dollar goal in rules).
-
-After 50 real trades: feed actual win rate and avg R to both tools.
+### `monte_carlo.py` — probabilistic simulation (5,000 random paths when data exists)
+Shows the RANGE of outcomes only when **`trade_stats.json` has compliant closes** (or you explicitly opt into `--ignore-stats-file` / CLI scenario). Otherwise the report explains **no simulation** — do not cite fantasy percentages.
+- **Run once per new chat thread** (Step 1), not on every follow-up message; re-run when `trade_stats.json` changes or you need a deliberate refresh (see Follow-up messages above).
+- When a full sim exists: normalize losing streaks, drawdown bands, goal probability — cite **that file**, not hardcoded goals.
+- After compliant trades accumulate: update `trade_stats.json` so the sim uses **measured** WR / R.
 
 ## X threads — clinical observer voice (optional)
 
