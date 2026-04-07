@@ -202,6 +202,7 @@ Run this checklist **after generating the response**, before ending the turn:
 - [ ] Did I include **XP** and **trade count toward Kelly** in my response?
 - [ ] Did I commit and push if 2+ files changed?
 - [ ] Did I mirror generic changes to public template?
+- [ ] **X / social (if present):** If `marketing/X_AUTONOMOUS_FLOW.md` exists and the session was substantive with post-worthy material, follow that file + `marketing/x-posting-principles.md` — post and archive, or skip explicitly.
 
 ### F. Decision Fatigue Budget (track per session)
 

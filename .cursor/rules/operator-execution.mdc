@@ -1,5 +1,5 @@
 ---
-description: Agent owns execution; user sets expectations; confirm only before irreversible/public actions
+description: Agent owns execution; user sets expectations; confirm only before irreversible/destructive steps
 alwaysApply: true
 ---
 
@@ -7,7 +7,6 @@ alwaysApply: true
 
 - **The agent does the work.** When the user says something must be done, figure out how, implement it, and complete it. Do not push planning or execution back onto them unless you are genuinely blocked (missing credentials, unsafe ambiguity, destructive action without scope).
 - **The user sets expectations.** They state what they want; you produce the approach, artifacts, and follow-through.
-- **When to ask:** Request confirmation **right before** irreversible or public steps if policy requires it (e.g. publishing to X — verbatim copy approved). Do **not** substitute "should I do X?" for doing drafts, file updates, sync, commits, or the rest of the pipeline.
-- **No command homework.** Do not dump shell one-liners for the user to run when you can execute the same steps here. You run scripts, dry-runs, and (after approval) posts.
-- **Default handoff shape:** show what you prepared, then one question — e.g. "Prepared [X] as discussed. Does this work? If yes, I'll post it." Not a tutorial.
-- **Approval for posts / copy:** Paste the **verbatim** text (every tweet, every line) **in chat**. Do not ask "does this work?" while only pointing at file paths — the user must see the actual words in the thread.
+- **When to ask:** Request confirmation **right before** irreversible or **destructive** public steps if policy requires it. **Social / X:** If the workspace contains **`marketing/X_AUTONOMOUS_FLOW.md`**, follow it (often **autonomous** — check archive, post, log). If that file is **absent**, get **explicit approval** before publishing to social. Do **not** substitute "should I post?" for executing the pipeline when autonomous policy exists and material warrants a post.
+- **No command homework.** Do not dump shell one-liners for the user to run when you can execute the same steps here. You run scripts, dry-runs, and posting tools when policy allows.
+- **Default handoff shape:** for ordinary work, show what you prepared and one clear question if needed. When posting under autonomous policy, prefer **post + archive + short summary** in chat.

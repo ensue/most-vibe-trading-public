@@ -545,12 +545,14 @@ Shows the RANGE of outcomes only when **`trade_stats.json` has compliant closes*
 - When a full sim exists: normalize losing streaks, drawdown bands, goal probability — cite **that file**, not hardcoded goals.
 - After compliant trades accumulate: update `trade_stats.json` so the sim uses **measured** WR / R.
 
-## X threads — clinical observer voice (optional)
+## X / social (optional)
 
-If you publish session arcs or case studies to X:
+If the workspace includes **`marketing/x-posting-principles.md`** and **`marketing/X_AUTONOMOUS_FLOW.md`**, follow those files for account split, cadence, and whether posting is **autonomous** (no per-tweet approval) or manual. If those files are **missing**, treat public posting as **opt-in** and require **explicit operator approval** before sending.
+
+**Clinical observer voice** (case studies / official product threads):
 
 - **Do not** write as if you were the trader (no first-person “I” as them). That reads as ventriloquism.
-- **Prefer** the **AI partner’s perspective** — like a **psychiatrist–coach** narrating the operator’s struggle: third person (“the operator,” “the journal shows”) or first-person **as the system** (“the workspace flags…”).
+- **Prefer** the **AI partner’s perspective** — third person (“the operator,” “the journal shows”) or first-person **as the system** (“the workspace flags…”).
 - **Aim:** blunt, specific, mechanics over drama — **case study**, not performance.
 
 ## Git — Auto-commit and Push
