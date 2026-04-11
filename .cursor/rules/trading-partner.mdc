@@ -370,6 +370,10 @@ When the user pastes a TradingView screenshot into the conversation:
 3. Log a reference line in the relevant journal entry (position or reflection):
    `![BTC 4H pre-trade](../charts/YYYY-MM/YYYY-MM-DD-btc-4h-pre-trade.png)`
 4. If multiple charts are pasted in one session, number them: `-01`, `-02`, etc.
+5. **Pending vs markup (mandatory on every screenshot):** Before treating the image as neutral TA, **classify** whether it shows **live or resting exchange intent**:
+   - **Pending / open orders likely:** TradingView **Long/Short Position** tool; **order / bracket / OCO** lines; **limit** ladders with bid/ask semantics; exchange **order panel** visible; shaded **order box** / **value area** that the operator later confirms is **resting size** on the book (not just a drawn zone).
+   - **Structure-only:** discretionary zones, FVG, Fibs, subjective boxes **without** order placement semantics.
+   - If **uncertain**, ask one line: **“Is this resting on the exchange or only markup?”** When still ambiguous, **assume possible pending intent**, state that in **Assumed from chart**, and for verification offer **`python most/exchange/sync.py`** + compare `exchange/data/open_orders.json` and `snapshot.md` to the chart.
 
 **Naming convention for `<context>`:** `overview`, `pre-trade`, `entry-zone`, `mid-trade`, `post-trade`, `review`. Pick whichever fits the moment in the conversation.
 
@@ -386,6 +390,7 @@ When the user pastes a TradingView screenshot into the conversation:
 
 ```
 ### Assumed from chart (verify)
+- Order context: structure-only | position tool | pending/resting orders (describe) | unknown — if pending is plausible, say so before neutral TA
 - Direction: long | short | unknown
 - Levels: entry ~…, SL ~…, TP(s) ~… (or “zones only” / “not readable from image”)
 - Source: **right-axis labels** | user-confirmed text | inferred from description — inferred may be wrong

@@ -244,6 +244,7 @@ If **MISMATCH**: do not rationalize. Fix on exchange or close and re-plan — th
 
 When you paste a **screenshot**, the AI must **in the same reply** state explicitly:
 
+- **Order context:** Is the image **structure-only markup**, or does it show **pending / resting exchange intent** (position tool, order/bracket lines, resting limit ladder, operator-confirmed open order)? If unclear, the AI **asks** once; it does **not** default to “analysis-only.”
 - **Direction:** long, short, or not stated  
 - **Price levels** it is using: entry, SL, TP(s), or zones — or **not readable**  
 - **Source:** your words (**confirmed**) vs **inferred from the image** (may be wrong)  
