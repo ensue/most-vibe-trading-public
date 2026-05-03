@@ -1,8 +1,8 @@
 # Liquidity Archeology — research framework
 
-**Status:** draft v0.1 (public template)
+**Status:** **idea / parking lot** v0.1 (public template). Lives in `ideas/` — promote to a dedicated project folder when it has earned that status.
 **Domain:** any liquid market with continuous price discovery — equity indices, crypto majors, FX, commodities
-**Project home:** `research/liquidity-archeology/`
+**Project home:** `ideas/liquidity-archeology/`
 
 ---
 
@@ -60,14 +60,33 @@ This is **research**, not trade planning. No position is ever opened from this f
 ## Files in this project
 
 ```
-research/liquidity-archeology/
+ideas/liquidity-archeology/
 ├── README.md                              ← this file (what + why + glossary)
 ├── methodology.md                         ← procedure: how to map cohorts on a chart
+├── tool.py                                ← Python implementation: JSON case file → markdown report
 ├── case-studies/                          ← worked examples (you create these)
 └── templates/
-    ├── cohort-snapshot.md                 ← map cohorts at a moment in time
-    └── event-analysis.md                  ← analyze a specific filtering event
+    ├── cohort-snapshot.md                 ← map cohorts at a moment in time (qualitative)
+    ├── event-analysis.md                  ← analyze a specific filtering event (qualitative)
+    └── case.template.json                 ← minimal JSON case for tool.py
 ```
+
+## Tool — `tool.py`
+
+Stdlib-only Python CLI. JSON in, markdown out.
+
+```bash
+python ideas/liquidity-archeology/tool.py validate case-studies/<your-case>.json
+python ideas/liquidity-archeology/tool.py report   case-studies/<your-case>.json
+python ideas/liquidity-archeology/tool.py liq 50                                    # % move that liquidates at 50x
+python ideas/liquidity-archeology/tool.py init --symbol BTC --tf 1W --date 2026-05-15 --out case-studies/<new>.json
+```
+
+The tool computes:
+- **Survivor map** — which cohorts survived which filtering events.
+- **Liquidity gradient** — sorted ladder of surviving cohorts with nearest pressure prices.
+- **Liquidation thresholds** — price level at which each cohort would be filtered.
+- **Vacuum zones** — price ranges with no surviving cohort entries.
 
 ---
 

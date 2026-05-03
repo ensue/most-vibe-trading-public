@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "metadata": {
+    "symbol": "FILL_ME",
+    "timeframe": "1M",
+    "snapshot_date": "YYYY-MM-DD",
+    "current_price": 0.0,
+    "ath_in_range": null,
+    "atl_in_range": null,
+    "chart_path": "",
+    "leverage_profile_note": "describe typical leverage / SL depth distribution for participants in this market"
+  },
+  "filtering_events": [
+    {
+      "id": "example-2022-bear",
+      "label": "Example: 2022 bear market",
+      "date": "2022-10",
+      "type": "grinding-trend",
+      "from_price": 100.0,
+      "to_price": 60.0,
+      "trigger": "Fed rate hikes",
+      "note": "magnitude_pct is auto-computed if omitted"
+    }
+  ],
+  "cohorts": [
+    {
+      "id": "example-honest-2022",
+      "label": "Example: honest 2022 doubt buyers",
+      "entry_price_low": 60.0,
+      "entry_price_high": 75.0,
+      "entry_period_start": "2022-10",
+      "entry_period_end": "2023-06",
+      "narrative": "Active doubt, recession fears, lower highs",
+      "conviction": "honest",
+      "leverage_profile": "cash_dominant",
+      "sl_depth_tolerance_pct": 50.0,
+      "direction": "long",
+      "size_estimate": "large",
+      "filtering_events_survived": [],
+      "notes": ""
+    }
+  ],
+  "predictions": [
+    {
+      "id": "example-p1",
+      "statement": "If price reaches 80, expect bounce from cohort honest-2022 (still in deep profit).",
+      "falsification": "If 80 is sliced through with no reaction within 5 candles.",
+      "real_money_testable": false
+    }
+  ]
+}
