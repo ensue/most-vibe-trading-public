@@ -72,6 +72,59 @@ A call is a **pre-committed prediction** logged BEFORE price reaches the entry z
 - **Calls by timeframe** — edge may exist on some timeframes but not others
 - **Selectivity** — calls logged / sessions with chart analysis (are you selective or calling everything?)
 
+### Sub-set aggregation
+
+Aggregate hit rate, expected R, and trigger rate **per slice** below. The point is to find **where in the operator's call universe the edge actually lives** — versus where it does not. A single 60% hit rate across 30 calls can hide "85% on highcap-1:1 setups, 30% on memecoin-3:1 setups" — and that distinction is the actionable answer.
+
+#### Slice 1 — Tier × Direction
+
+| Tier | Long calls | Short calls | Hit rate L | Hit rate S | Expected R |
+|---|---|---|---|---|---|
+| memecoin |  |  |  |  |  |
+| midcap |  |  |  |  |  |
+| highcap |  |  |  |  |  |
+
+#### Slice 2 — Planned R:R bucket
+
+| R:R bucket | N triggered | Hit rate | Expected R per call | After fees |
+|---|---|---|---|---|
+| ≤ 1:1 |  |  |  |  |
+| 1:1 – 1.5:1 |  |  |  |  |
+| 1.5 – 2:1 |  |  |  |  |
+| 2 – 3:1 |  |  |  |  |
+| 3 – 5:1 |  |  |  |  |
+| > 5:1 |  |  |  |  |
+
+**Hypothesis:** which planned-RRR window is statistically most profitable for the operator's detection ability? A trader can be excellent at 1:1 scalps and terrible at 5:1 swing trades, or the inverse. Without this slice the answer is hidden behind average.
+
+#### Slice 3 — Entry method
+
+| Entry method | N triggered | Hit rate | Avg R | Notes |
+|---|---|---|---|---|
+| `market_wick` |  |  |  | Wick Protocol entries |
+| `limit_at_level` |  |  |  | Resting limits |
+| `close_confirmation` |  |  |  | Close-of-bar entries |
+| `market_chase` |  |  |  | FOMO / chasing — expected worst |
+
+**Hypothesis:** The Wick Protocol exists because operators may have edge in catching wicks. This slice answers whether that claim survives 30+ data points.
+
+#### Slice 4 — Tier × R:R (cross-tab, optional after 50+ calls)
+
+Reveals interactions like "midcap-2:1 is the sweet spot" or "highcap is only profitable below 1.5:1". Only meaningful with sample sizes that survive splitting (≥ 5 triggered calls per cell).
+
+### Stability requirement for CONFIRMED status
+
+In addition to the binomial test on aggregate hit rate, the system requires **stability across slices** before flipping to CONFIRMED. This protects against the per-month-overfit risk — a single sub-set carrying the entire signal is fragile evidence.
+
+**Stability rules (all must hold for CONFIRMED):**
+
+1. **No single tier accounts for > 50% of all triggered calls.**
+2. **No single R:R bucket accounts for > 50% of triggered calls.**
+3. **No single entry method accounts for > 60% of triggered calls** (slightly looser since some operators legitimately specialize, but still flagged for review).
+4. **Per-slice positive expected R after fees** — at least 2 of the 3 primary slice axes (tier, R:R, entry method) must show **positive expected R after fees** in their dominant cell.
+
+If aggregate passes the binomial test but stability fails: edge status is **CONFIRMED-CONDITIONAL** — trading is allowed at fixed Rule 2 risk, but the Kelly transition (calibration→Kelly gate) is **not** unlocked until stability is satisfied on the next 50-call window.
+
 ### Statistical significance — lookup table
 
 AI does NOT need to compute p-values. Use this table. For N triggered calls with K hits, find the **minimum K needed** for edge to be significant (one-tailed binomial, p ≤ 0.10 vs null hypothesis of 50%):

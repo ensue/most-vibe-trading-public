@@ -155,7 +155,7 @@ There is no scenario, no "new information," no market condition that justifies w
 After a stop-out, return to this workspace before any new trade.
 AI logs it. Then — and only then — consider the next entry.
 
-**Minimum cooldown times:**
+**Minimum cooldown times (single-event):**
 
 | Event | Minimum wait |
 |-------|-------------|
@@ -166,7 +166,21 @@ AI logs it. Then — and only then — consider the next entry.
 
 The AI tracks cooldown based on **exchange timestamps**, not user self-report. If you appear before cooldown expires, the AI engages with mood, analysis, and journal — **not** with trade ideas, sizing, or entry coaching.
 
-**Why:** Serial entry after losses is a consistent value-destruction pattern. Each subsequent entry is less analytical and more compulsive. The cooldown breaks the revenge cycle. A one-minute rule does not replace real time gaps when the pattern is activated — explicit minimum waits are required.
+### Cumulative drawdown timeouts (chapter-level)
+
+Single-event cooldowns protect against revenge in minutes/hours; they do not protect against slow bleed. The asymmetry of recovery (a -10% drawdown takes ~+11.1% to undo, -20% takes +25%, -50% takes +100%, -90% takes +900%) means **every percentage past -10% costs more to recover than it cost to lose**. Hard chapter-level stops on cumulative DD vs **chapter-start equity**:
+
+| Drawdown vs chapter-start equity | Mandatory action |
+|---|---|
+| **-10%** | Chapter auto-close. Postmortem before next session. New chapter starts only after a calm reflection entry. |
+| **-20%** | Chapter auto-close **AND** **30-day no-trade** cooldown from last close. Analysis / calls / journal allowed; no new positions. |
+| **-50%** | Era-level review. Cannot continue from same declared bankroll without re-declaring it (cold reflection, mandatory consultation of all prior `chapter-N-postmortem.md`). |
+
+**Anchor:** chapter-start equity recorded in the opening line of `chapter-N-live.md`, NOT current high-water mark. This prevents "I had +30% so a -10% from peak is fine" rationalization.
+
+**The AI must check this on every sync.** If `equity / chapter_start_equity ≤ 0.90`, the AI opens with: "Chapter auto-close triggered. Drawdown -[X]% from chapter start. No more risk coaching this chapter. Write the postmortem first."
+
+**Why:** Without a tripwire that does not depend on operator energy, a chapter rides cumulative DD all the way to capitulation. Drawdown timeouts add the cumulative dimension single-event cooldowns miss. Serial entry breaks the revenge cycle in time; drawdown gates break it in capital.
 
 ---
 
@@ -218,6 +232,64 @@ The AI must demonstrably contribute to trading results. This means:
 **Metric:** The system pays for itself primarily through **losses prevented**, not trades generated. Track: interventions fired, cascades averted, compliant trade count. If you are trading less but losing less, the system is working.
 
 This is not a joke rule. But it must **not** create pressure to trade. The optimal action is often to **not** trade. A month with zero trades and zero losses is a successful month — the subscription bought survival.
+
+---
+
+## Compliant Trade — binary definition
+
+The system counts toward the Kelly threshold and toward edge verification only with **compliant trades**. "Compliant" must be **operational, binary, and achievable** — not a vibe. A trade is **COMPLIANT** if and only if **every** condition below is **YES**. A single NO makes the trade **NON-COMPLIANT** and excluded from the compliant counter (it still goes to the journal — exclusion is from progression, not from the record).
+
+**Critical: compliance is independent of PnL.** A losing trade can be COMPLIANT. A winning trade can be NON-COMPLIANT. The point is to measure *process quality* across enough samples to reveal whether the process produces edge — not to reward winners or punish losers.
+
+### The 10-point checklist (paste into every position entry under `## Compliance check`)
+
+```
+- [ ]  1. Pre-trade lock OR Wick Protocol PASS — Rule 1
+       Path A: full plan stated in workspace BEFORE order placed.
+       Path B: order placed first, but SL set at moment of entry AND workspace visit within 5 min AND post-entry verify PASS.
+- [ ]  2. Cooldown respected — Rule 5
+       Single-event cooldown elapsed (60 min / 4h / 24h depending on prior event).
+       Cumulative drawdown gates not violated (chapter not in -10% auto-close state).
+- [ ]  3. Plan complete BEFORE entry — Rule 3
+       Entry, SL, TP (≥1 level), size, one-sentence thesis ALL stated before the order.
+- [ ]  4. Risk within Rule 2 — Rule 2
+       Worst-case loss at SL within calibration tolerance (e.g. fixed-2% phase) OR Half-Kelly (after the calibration gate).
+- [ ]  5. Fee Drag Check NOT BLOCKED — Rule 3
+       SL distance ≥ 1% of entry price. (WARNING is allowed; BLOCKED is not.)
+- [ ]  6. Liquidation check passed — Rule 3
+       For leveraged positions: liq price beyond SL (further from entry). Stated before entry.
+- [ ]  7. SL set ON exchange before any other action — Rules 1 & 4
+       Protective order is live on the exchange, not "I'll set it later".
+- [ ]  8. SL not widened during life of trade — Rule 4
+       SL moved toward entry / BE only. Never away. No exception.
+- [ ]  9. Single primary thesis — Rule 6
+       One primary position. Any second leg is a documented liquidity-zone hedge per Rule 6 OR sequential bridge into limit ladder, NOT a second discretionary thesis.
+- [ ] 10. Post-entry verification PASS — verification procedure
+       Sync ran, AI compared exchange to locked plan, result PASS. Any MISMATCH = NON-COMPLIANT regardless of outcome.
+```
+
+A trade is **COMPLIANT** when all 10 boxes are ticked. PnL is not in the list.
+
+### How it gets recorded
+
+Each `journal/positions/YYYY-MM-DD-<symbol>-<slug>.md` entry ends with:
+
+```
+## Compliance check
+[paste the 10-point checklist with [x] / [ ] filled]
+
+## Compliance verdict
+COMPLIANT | NON-COMPLIANT
+First failed condition (if any): #N — <which rule, what happened>
+```
+
+The AI fills this section after post-entry verification (item 10). After the trade closes, the AI re-checks items 8–10 against the closing record and updates the verdict if anything changed (e.g. SL widened mid-trade → flips to NON-COMPLIANT).
+
+`journal/positions/_summary.md` then maintains `compliant_trades_total` and `compliant_trades_streak` (current run, broken by any NON-COMPLIANT or by a chapter close).
+
+### Soft-compliant tier (optional, future)
+
+A second tier may be introduced after the first **5 fully compliant trades**: **SOFT-COMPLIANT** = items 1, 3, 4, 7, 8, 10 met but minor process issues on 2/5/6/9. Soft-compliant trades count toward edge verification (`journal/calls/`) but **not** toward the calibration→Kelly gate. This tier is **not active** by default — it activates only after 5 fully compliant trades are on the record. Do not pre-emptively rationalize toward it.
 
 ---
 

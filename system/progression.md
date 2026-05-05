@@ -35,15 +35,23 @@ See `system/edge_verification.md` for full protocol.
 
 ### 2) Analysis Quality XP
 
-Scored from 0 to 40 per meaningful setup review (call OR trade plan):
+Scored from 0 to **44** per meaningful setup review (call OR trade plan):
 
 - Structure clarity (market context and setup map): 0-8
 - Invalidation quality (structural, not convenience): 0-10
 - Scenario quality (if/then branches): 0-8
 - Assumption disclosure quality (confirmed vs inferred): 0-6
 - Precision and coherence (clean, falsifiable, non-handwave): 0-8
+- **Multi-TF context disclosure**: 0-4
 
-**This applies to CALLS equally.** A well-structured call without a trade earns the same Analysis XP as a pre-trade plan.
+**Multi-TF rubric (0-4):**
+- **0** — only one timeframe referenced; no acknowledgement of higher-TF context.
+- **1** — higher-TF mentioned but only in passing; no concrete claim.
+- **2** — at least one higher-TF (D1 or H4) checked with a specific clause. H1 / entry-TF stated.
+- **3** — D1 + H4 + H1 each disclosed with a concrete clause; conflicts (if any) named.
+- **4** — full multi-TF disclosure AND the call explicitly identifies the slice it belongs to (`tier`, `R:R bucket`, `entry_method`) per `journal/calls/TEMPLATE.md`. This makes the call directly aggregatable into the edge-verification slices.
+
+**This applies to CALLS equally.** A well-structured call without a trade earns the same Analysis XP as a pre-trade plan. The multi-TF + slice points are deliberately weighted toward calls that fit into the sub-set aggregation framework — the system rewards calls that *contribute to verifying edge*, not just calls that exist.
 
 ### 3) Compliance XP (trade execution track)
 
