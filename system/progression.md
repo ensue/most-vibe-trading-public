@@ -85,18 +85,43 @@ Scored from 0 to **44** per meaningful setup review (call OR trade plan):
 - **Mobile trading (phone execution): -75 XP**
 - **Trading during UNCONFIRMED edge without workspace plan: -30 XP**
 
-## Sticky Penalties (moonshot-proof)
+## Floor rule (operator-amendable cold-state design choice)
 
-**Problem:** The old system allowed a single large XP session to erase all penalties. This created a perverse incentive: gamble freely, then do one clean session to "reset."
+**Two valid implementations** — pick the one that matches the operator's psychology. Document the choice in `progression_state.json` `xp_floor` field.
 
-**Definition — "session":** One chat thread (Cursor conversation) that touches trading, analysis, or review. Multiple messages in the same thread = one session. A new chat thread = a new session.
+### Implementation A — Floor at 0 (abundance frame)
 
-**Solution:** Penalties create a **discipline debt** that is worked off slowly:
+**Rule:**
 
-1. **Penalty floor per chapter:** Sum all negative XP entries in the current chapter → `penalty_total` (negative number). To advance to the next level, the user must earn positive XP ≥ **2 × |penalty_total|** within the chapter, ON TOP of the level threshold.
-2. **Single-session cap:** No single session can contribute more than **+80 XP** net. If a session yields +120 raw, log +80. Negative sessions have no floor.
-3. **Penalty decay:** After each **consecutive compliant session** (zero penalty entries), reduce `|penalty_total|` by **10%**. A non-compliant session resets the consecutive count to 0.
-4. **No retroactive erasure:** Reversed penalties are logged as separate positive entries with `key: penalty_reversal`, not deletion of the original.
+1. **Displayed `total_xp` is floored at 0.** Negative `earned_xp` events reduce displayed total but cannot bring it below 0. Once total = 0, further negative events are recorded in `history[]` with full earned_xp value but do not change displayed total.
+2. **Positive `earned_xp` events always add normally** and immediately bump the displayed total above 0.
+3. **History entries preserved verbatim** — full earned_xp values (positive or negative) remain for audit.
+4. **`lifetime_negative_xp_archived`** retained as separate non-displayed metric for cold-state review.
+5. **Single-session cap +80 XP net** retained as anti-moonshot protection.
+
+**Rationale:** abundance frame for motivation. If operator's documented profile says "dopamine OS, visible progress works, rigid climb-out systems fail" → floor rule prevents the demotivational deep-negative state. Goal gradient effect functions immediately on positive behavior.
+
+**Trade-off:** discipline-debt signal is hidden in `lifetime_negative_xp_archived` rather than headline total. Cold-state review of that archived metric becomes the discipline-debt check.
+
+### Implementation B — Sticky Penalties (climb-out frame, no floor)
+
+**Rule:**
+
+1. **Penalty floor per chapter:** Sum all negative XP entries in current chapter → `penalty_total`. To advance to next level, user must earn positive XP ≥ **2 × |penalty_total|** within chapter, ON TOP of level threshold.
+2. **Single-session cap:** No single session can contribute more than **+80 XP** net.
+3. **Penalty decay:** After each consecutive compliant session, reduce `|penalty_total|` by 10%. Non-compliant session resets count to 0.
+4. **No retroactive erasure.** Reversed penalties logged as separate positive entries with `key: penalty_reversal`, not deletion.
+
+**Rationale:** prevents moonshot-XP-reset. Penalty is sticky; cannot be erased by single clean session.
+
+**Trade-off:** demotivational for operators whose profile says rigid climb-out systems fail. The deep-negative display can extinguish positive feedback loops before they form.
+
+### Choosing
+
+- **Implementation A** (floor at 0) — for operators whose profile emphasizes visible streaks, dopamine-as-OS, abundance-thinking psychology.
+- **Implementation B** (sticky penalties) — for operators whose profile shows higher tolerance for delayed gratification, who treat the negative number itself as motivating signal.
+
+Both implementations preserve audit data; the difference is in display/aggregation. Choice must be made in cold state and documented in `progression_state.json`. Switching mid-chapter is permitted as a cold-state amendment per Chapter 6 condition #4 path; document the switch with reasoning.
 
 ## Coach Adjustment Lane (bounded)
 
