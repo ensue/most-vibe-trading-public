@@ -33,6 +33,10 @@ _After a stop-out, do you immediately re-enter? Multiple trades on same pair aft
 ### Exhaustion Impairment
 _Do long sessions degrade decision quality? At what hour mark?_
 
+### Multi-Exchange Evasion (parallel-venue escape from observation)
+_When your primary exchange accumulates emotional load from cooldowns, journaling pressure, AI feedback, or system constraints, do you respond by opening a parallel futures account on a venue this workspace cannot see? This is a **structural-level evasion** — same family as bypassing the laptop-only rule with a phone, but at venue level instead of device level._
+_**Counter:** Single declared trading venue at any time. All other futures accounts must be dormant (zero balance, zero positions). Opening any new exchange account during cooldown or active chapter is itself the violation — not the first trade._
+
 ---
 
 ## Cognitive Style
